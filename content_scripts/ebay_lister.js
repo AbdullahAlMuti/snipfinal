@@ -273,6 +273,12 @@ async function runEbayAutomation(data) {
         console.log("⚠️ No item specifics data found in storage");
     }
     
+    // Click Apply All button
+    await clickApplyAllButton();
+    
+    // Select frequently used items
+    await selectFrequentlyUsedItems();
+    
     // Paste SKU
     if (data.ebaySku) {
         try {
@@ -1150,6 +1156,172 @@ window.manualItemSpecifics = async (itemSpecifics) => {
     
     console.log("🧪 Manual item specifics triggered");
     await fillItemSpecifics(itemSpecifics);
+};
+
+// Click Apply All button function
+async function clickApplyAllButton() {
+    console.log("🔘 Looking for Apply All button...");
+    
+    // Wait a bit for the page to load
+    await wait(2000);
+    
+    const applyAllSelectors = [
+        'button[data-testid*="apply-all"]',
+        'button[class*="apply-all"]',
+        'button[class*="applyAll"]',
+        'button[class*="apply_all"]',
+        'button:contains("Apply all")',
+        'button:contains("Apply All")',
+        'button:contains("APPLY ALL")',
+        'input[type="button"][value*="Apply all"]',
+        'input[type="button"][value*="Apply All"]',
+        'input[type="submit"][value*="Apply all"]',
+        'input[type="submit"][value*="Apply All"]',
+        '[role="button"]:contains("Apply all")',
+        '[role="button"]:contains("Apply All")'
+    ];
+    
+    let applyAllButton = null;
+    
+    // Try to find the button using various selectors
+    for (const selector of applyAllSelectors) {
+        try {
+            applyAllButton = document.querySelector(selector);
+            if (applyAllButton) {
+                console.log(`✅ Found Apply All button with selector: ${selector}`);
+                break;
+            }
+        } catch (e) {
+            // Invalid selector, continue
+        }
+    }
+    
+    // If not found with selectors, search by text content
+    if (!applyAllButton) {
+        console.log("🔍 Searching for Apply All button by text content...");
+        const allButtons = document.querySelectorAll('button, input[type="button"], input[type="submit"], [role="button"]');
+        
+        for (const button of allButtons) {
+            const text = button.textContent?.toLowerCase() || button.value?.toLowerCase() || '';
+            if (text.includes('apply all') || text.includes('applyall')) {
+                applyAllButton = button;
+                console.log("✅ Found Apply All button by text content");
+                break;
+            }
+        }
+    }
+    
+    if (applyAllButton) {
+        console.log("🎯 Attempting to click Apply All button...");
+        
+        // Check if button is visible and enabled
+        if (applyAllButton.offsetParent !== null && !applyAllButton.disabled) {
+            applyAllButton.click();
+            console.log("✅ Apply All button clicked successfully");
+            
+            // Wait for any resulting actions
+            await wait(2000);
+        } else {
+            console.log("⚠️ Apply All button found but not clickable (disabled or hidden)");
+        }
+    } else {
+        console.log("⚠️ Apply All button not found");
+    }
+}
+
+// Select frequently used items function
+async function selectFrequentlyUsedItems() {
+    console.log("⭐ Looking for frequently used items to select...");
+    
+    // Wait a bit for the page to load
+    await wait(2000);
+    
+    // Look for frequently used items sections
+    const frequentlyUsedSelectors = [
+        '[data-testid*="frequently-used"]',
+        '[class*="frequently-used"]',
+        '[class*="frequentlyUsed"]',
+        '[class*="frequently_used"]',
+        '[class*="popular"]',
+        '[class*="suggested"]',
+        '[class*="recommended"]',
+        '.frequently-used',
+        '.frequentlyUsed',
+        '.popular-items',
+        '.suggested-items'
+    ];
+    
+    let frequentlyUsedSection = null;
+    
+    for (const selector of frequentlyUsedSelectors) {
+        frequentlyUsedSection = document.querySelector(selector);
+        if (frequentlyUsedSection) {
+            console.log(`✅ Found frequently used section: ${selector}`);
+            break;
+        }
+    }
+    
+    // If no specific section found, look for common patterns
+    if (!frequentlyUsedSection) {
+        console.log("🔍 Searching for frequently used items by common patterns...");
+        
+        // Look for sections with "frequently", "popular", "suggested" in text
+        const allSections = document.querySelectorAll('div, section, fieldset');
+        for (const section of allSections) {
+            const text = section.textContent?.toLowerCase() || '';
+            if (text.includes('frequently used') || 
+                text.includes('popular') || 
+                text.includes('suggested') ||
+                text.includes('recommended')) {
+                frequentlyUsedSection = section;
+                console.log("✅ Found frequently used section by text content");
+                break;
+            }
+        }
+    }
+    
+    if (frequentlyUsedSection) {
+        console.log("🎯 Processing frequently used items...");
+        
+        // Look for clickable items (buttons, links, checkboxes, radio buttons)
+        const clickableItems = frequentlyUsedSection.querySelectorAll(
+            'button, a, input[type="checkbox"], input[type="radio"], [role="button"], [role="checkbox"], [role="radio"]'
+        );
+        
+        console.log(`🔍 Found ${clickableItems.length} clickable items in frequently used section`);
+        
+        // Click the first few items (usually the most popular ones)
+        const itemsToClick = Math.min(3, clickableItems.length);
+        
+        for (let i = 0; i < itemsToClick; i++) {
+            const item = clickableItems[i];
+            
+            if (item && item.offsetParent !== null && !item.disabled) {
+                console.log(`🎯 Clicking frequently used item ${i + 1}:`, item.textContent?.substring(0, 50) || item.value || 'No text');
+                
+                item.click();
+                
+                // Small delay between clicks
+                await wait(500);
+            }
+        }
+        
+        console.log(`✅ Clicked ${itemsToClick} frequently used items`);
+    } else {
+        console.log("⚠️ No frequently used items section found");
+    }
+}
+
+// Manual Apply All button function for testing
+window.manualApplyAll = async () => {
+    console.log("🧪 Manual Apply All triggered");
+    await clickApplyAllButton();
+};
+
+// Manual frequently used items function for testing
+window.manualFrequentlyUsed = async () => {
+    console.log("🧪 Manual frequently used items triggered");
+    await selectFrequentlyUsedItems();
 };
 
 // Start the initialization with a small delay to ensure page is ready
