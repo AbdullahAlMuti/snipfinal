@@ -12,7 +12,6 @@
   inset: 0;
   display: none;
   background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(4px);
   z-index: 2147483647;
   justify-content: center;
   align-items: center;
@@ -42,6 +41,9 @@
   max-height: 95vh;
   overflow: hidden;
   animation: slideUp 0.3s ease-out;
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
 }
 
 @keyframes slideUp {
@@ -123,6 +125,9 @@
   max-height: 100%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: border-color 0.2s ease;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
 }
 
 #editor-canvas:hover {

@@ -91,10 +91,19 @@
         canvasWidth = canvasHeight * aspectRatio;
       }
       
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
+      // Set high DPI for crisp rendering
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      canvas.width = canvasWidth * devicePixelRatio;
+      canvas.height = canvasHeight * devicePixelRatio;
       canvas.style.width = canvasWidth + 'px';
       canvas.style.height = canvasHeight + 'px';
+      
+      // Scale context for high DPI
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      
+      // Set high quality rendering
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       
       // Clear stickers for new image
       stickers.length = 0;
@@ -132,15 +141,19 @@
   function drawCanvas() {
     if (!canvas || !ctx || !baseImg) return;
     
+    // Get display dimensions (without device pixel ratio)
+    const displayWidth = canvas.style.width.replace('px', '');
+    const displayHeight = canvas.style.height.replace('px', '');
+    
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // Draw background
     ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, displayWidth, displayHeight);
     
     // Draw base image
-    ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(baseImg, 0, 0, displayWidth, displayHeight);
     
     // Draw stickers
     stickers.forEach((sticker, index) => {
@@ -315,10 +328,10 @@
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    const displayWidth = parseFloat(canvas.style.width);
+    const displayHeight = parseFloat(canvas.style.height);
+    const x = (e.clientX - rect.left) * (displayWidth / rect.width);
+    const y = (e.clientY - rect.top) * (displayHeight / rect.height);
     
     // Check for delete button first
     if (activeSticker) {
@@ -365,20 +378,20 @@
     if (!activeSticker || !canvas) return;
     
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    const displayWidth = parseFloat(canvas.style.width);
+    const displayHeight = parseFloat(canvas.style.height);
+    const x = (e.clientX - rect.left) * (displayWidth / rect.width);
+    const y = (e.clientY - rect.top) * (displayHeight / rect.height);
     
     if (dragging) {
-      activeSticker.x = Math.max(0, Math.min(canvas.width - activeSticker.w, x - dragOffset.x));
-      activeSticker.y = Math.max(0, Math.min(canvas.height - activeSticker.h, y - dragOffset.y));
+      activeSticker.x = Math.max(0, Math.min(displayWidth - activeSticker.w, x - dragOffset.x));
+      activeSticker.y = Math.max(0, Math.min(displayHeight - activeSticker.h, y - dragOffset.y));
       drawCanvas();
     } else if (resizing) {
       const newW = Math.max(20, x - activeSticker.x);
       const newH = Math.max(20, y - activeSticker.y);
-      activeSticker.w = Math.min(canvas.width - activeSticker.x, newW);
-      activeSticker.h = Math.min(canvas.height - activeSticker.y, newH);
+      activeSticker.w = Math.min(displayWidth - activeSticker.x, newW);
+      activeSticker.h = Math.min(displayHeight - activeSticker.y, newH);
       drawCanvas();
     }
   }
