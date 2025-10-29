@@ -30,7 +30,6 @@ const injectUI = async () => {
     setTimeout(() => {
         const snipeTitleBtn = document.getElementById('snipe-title-btn');
         if (snipeTitleBtn) {
-            console.log('🔄 Auto-clicking Snipe Title button...');
             snipeTitleBtn.click();
         }
     }, 500); // Small delay to ensure everything is loaded
@@ -138,7 +137,6 @@ const scrapeProductDetails = () => {
         details.description = descriptionElement.innerText.trim();
     }
     
-    console.log('✅ Scraped Product Details:', details);
     return details;
 };
 
@@ -356,7 +354,6 @@ class AmazonImageExtractor {
 
     // Main extraction algorithm with multiple approaches
     async extractAllImages() {
-        console.log('🚀 Starting comprehensive Amazon image extraction...');
         
         // Reset collections
         this.images.clear();
@@ -364,7 +361,6 @@ class AmazonImageExtractor {
         
         // Wait for page to fully load
         await this.waitForPageLoad();
-        console.log('📄 Page loaded, starting extraction...');
         
         // Try multiple extraction approaches
         const approaches = [
@@ -376,15 +372,11 @@ class AmazonImageExtractor {
 
         for (let i = 0; i < approaches.length; i++) {
             const approach = approaches[i];
-            console.log(`🔍 Trying approach: ${approach.name} (${i + 1}/${approaches.length})`);
             
             try {
                 await approach.method();
-                console.log(`📊 After ${approach.name}: ${this.images.size} total images found`);
-                
                 // If we found images, break early
                 if (this.images.size > 0) {
-                    console.log(`✅ ${approach.name} found images, proceeding to validation`);
                     break;
                 }
             } catch (error) {
