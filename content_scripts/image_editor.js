@@ -1,7 +1,7 @@
 (() => {
   const STORAGE_KEY = 'watermarkedImages';
   const STICKER_KEY = 'userStickers';
-  const OVERLAY_ID = 'snipe-editor-overlay';
+  const OVERLAY_ID = 'snipe-editor-root';
   const CANVAS_ID = 'editor-canvas';
   const GALLERY_ID = 'sticker-gallery';
   
