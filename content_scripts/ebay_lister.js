@@ -104,7 +104,10 @@ async function runEbayAutomation(data) {
         'input[aria-label*="custom"]',
         'input[aria-label*="sku"]',
         'input[placeholder*="custom"]',
-        'input[placeholder*="sku"]'
+        'input[placeholder*="sku"]',
+        'input[type="text"][name*="label"]',
+        'input[type="text"][id*="label"]',
+        'input[type="text"][class*="label"]'
       ];
 
       let skuInput = null;
@@ -117,11 +120,54 @@ async function runEbayAutomation(data) {
         }
       }
 
+      // Fallback: Search by label text
+      if (!skuInput) {
+        console.log("🔍 Trying fallback method: searching by label text...");
+        const labels = document.querySelectorAll('label');
+        for (const label of labels) {
+          const labelText = label.textContent?.toLowerCase() || '';
+          if (labelText.includes('custom label') || labelText.includes('sku') || 
+              labelText.includes('identifier') || labelText.includes('item number')) {
+            const forAttr = label.getAttribute('for');
+            if (forAttr) {
+              const found = document.getElementById(forAttr);
+              if (found && found.type === 'text') {
+                skuInput = found;
+                console.log(`✅ Found SKU input via label: "${labelText}"`);
+                break;
+              }
+            }
+          }
+        }
+      }
+
       if (skuInput) {
         reactInput(skuInput, data.ebaySku);
         console.log("✅ SKU filled:", data.ebaySku);
       } else {
         console.warn("⚠️ SKU input not found");
+        // Debug: List all text inputs on the page
+        const allTextInputs = document.querySelectorAll('input[type="text"]');
+        console.log(`🔍 Found ${allTextInputs.length} text inputs on page:`, 
+          Array.from(allTextInputs).map(input => ({
+            name: input.name,
+            id: input.id,
+            placeholder: input.placeholder,
+            ariaLabel: input.getAttribute('aria-label'),
+            className: input.className,
+            value: input.value
+          }))
+        );
+        
+        // Debug: List all labels on the page
+        const allLabels = document.querySelectorAll('label');
+        console.log(`🔍 Found ${allLabels.length} labels on page:`, 
+          Array.from(allLabels).map(label => ({
+            text: label.textContent?.trim(),
+            for: label.getAttribute('for'),
+            id: label.id
+          }))
+        );
       }
     } catch (err) {
       console.error("❌ SKU fill failed:", err);
@@ -173,8 +219,84 @@ chrome.runtime.onMessage.addListener(async (request) => {
 });
 
 // ─────────────────────────────────────────────
+// 🧪 Manual Testing Functions
+// ─────────────────────────────────────────────
+window.testSkuFill = function(sku = "TEST-SKU-123") {
+  console.log("🧪 Manual SKU fill test...");
+  
+  const reactInput = (el, value) => {
+    const lastValue = el.value;
+    el.value = value;
+    const event = new Event('input', { bubbles: true });
+    const tracker = el._valueTracker;
+    if (tracker) tracker.setValue(lastValue);
+    el.dispatchEvent(event);
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    el.dispatchEvent(new Event('blur', { bubbles: true }));
+  };
+
+  const skuSelectors = [
+    'input[name="customLabel"]',
+    'input[id*="CUSTOMLABEL"]',
+    'input[id*="@TITLE"]',
+    'input[aria-describedby*="counter"]',
+    'input[aria-label*="custom"]',
+    'input[aria-label*="sku"]',
+    'input[placeholder*="custom"]',
+    'input[placeholder*="sku"]',
+    'input[type="text"][name*="label"]',
+    'input[type="text"][id*="label"]',
+    'input[type="text"][class*="label"]'
+  ];
+
+  let skuInput = null;
+  for (const selector of skuSelectors) {
+    const found = document.querySelector(selector);
+    if (found && found.type === 'text') {
+      skuInput = found;
+      console.log(`✅ Found SKU input with selector: ${selector}`);
+      break;
+    }
+  }
+
+  if (skuInput) {
+    reactInput(skuInput, sku);
+    console.log("✅ SKU filled manually:", sku);
+    return true;
+  } else {
+    console.warn("⚠️ SKU input not found for manual test");
+    return false;
+  }
+};
+
+window.debugSkuFields = function() {
+  console.log("🔍 Debugging SKU fields...");
+  
+  const allTextInputs = document.querySelectorAll('input[type="text"]');
+  console.log(`📝 Found ${allTextInputs.length} text inputs:`, 
+    Array.from(allTextInputs).map(input => ({
+      name: input.name,
+      id: input.id,
+      placeholder: input.placeholder,
+      ariaLabel: input.getAttribute('aria-label'),
+      className: input.className,
+      value: input.value
+    }))
+  );
+  
+  const allLabels = document.querySelectorAll('label');
+  console.log(`🏷️ Found ${allLabels.length} labels:`, 
+    Array.from(allLabels).map(label => ({
+      text: label.textContent?.trim(),
+      for: label.getAttribute('for'),
+      id: label.id
+    }))
+  );
+};
+
+// ─────────────────────────────────────────────
 // 🔁 Auto Start
 // ─────────────────────────────────────────────
 setTimeout(() => {
-    console.log("🚀 Starting eBay Lister initialization...");
+  console.log("🚀 Starting eBay Lister initialization...");
 }, 1000);
