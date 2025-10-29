@@ -1,4 +1,23 @@
 console.log("eBay Lister script loaded: Awaiting data...");
+console.log("🔗 Current URL:", window.location.href);
+
+// Detect eBay page type
+function detectEbayPageType() {
+  const url = window.location.href;
+  if (url.includes('/lstng?draftId=')) {
+    return 'draft-listing';
+  } else if (url.includes('/sl/prelist/')) {
+    return 'prelist';
+  } else if (url.includes('/lstng')) {
+    return 'listing';
+  } else if (url.includes('/sell')) {
+    return 'sell';
+  }
+  return 'unknown';
+}
+
+const pageType = detectEbayPageType();
+console.log("📄 eBay page type detected:", pageType);
 
 // Manual trigger function for testing (can be called from console)
 window.testEbayFilling = async function() {
@@ -36,9 +55,10 @@ chrome.runtime.onMessage.addListener(async (request) => {
     console.log("🎯 RUN_EBAY_LISTER received, starting automation...");
     console.log("🔗 Current URL:", window.location.href);
     console.log("📄 Page title:", document.title);
+    console.log("📄 Page type:", detectEbayPageType());
     
-    // Wait a bit for page to fully load
-    await wait(3000);
+    // Wait for page to be fully loaded - more aggressive approach
+    await waitForPageLoad();
     
     const data = await chrome.storage.local.get([
       "productTitle",
@@ -263,6 +283,42 @@ async function fillFormFields(title, finalPrice, firstImage) {
 
 // Helper function to avoid conflicts with other scripts
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Wait for page to be fully loaded
+async function waitForPageLoad() {
+  console.log("⏳ Waiting for page to load...");
+  
+  // Wait for basic page load
+  await wait(2000);
+  
+  // Wait for any dynamic content to load
+  let attempts = 0;
+  const maxAttempts = 10;
+  
+  while (attempts < maxAttempts) {
+    const hasFormElements = document.querySelectorAll('input, textarea, select').length > 0;
+    const hasFileInputs = document.querySelectorAll('input[type="file"]').length > 0;
+    
+    console.log(`🔄 Load check ${attempts + 1}/${maxAttempts}:`, {
+      formElements: document.querySelectorAll('input, textarea, select').length,
+      fileInputs: document.querySelectorAll('input[type="file"]').length,
+      hasFormElements,
+      hasFileInputs
+    });
+    
+    if (hasFormElements) {
+      console.log("✅ Page appears to be loaded with form elements");
+      break;
+    }
+    
+    attempts++;
+    await wait(1000);
+  }
+  
+  // Additional wait for any remaining dynamic content
+  await wait(2000);
+  console.log("✅ Page load wait completed");
+}
 
 // Helper function to wait for an element to appear
 async function waitForElement(selector, timeout = 10000) {
@@ -1051,7 +1107,7 @@ async function initializeEbayLister() {
         }
         
         if (result.ebayTitle || result.ebaySku || result.ebayPrice || result.ebayCondition) {
-            await runEbayAutomation(result);
+                    await runEbayAutomation(result);
 
             // Cleanup storage after use
             chrome.storage.local.remove(['ebayTitle', 'ebaySku', 'ebayPrice', 'ebayCondition'], () => {});
