@@ -31,11 +31,10 @@
         cssRes.text()
       ]);
       
-      // Create overlay
-      const overlay = document.createElement('div');
-      overlay.id = OVERLAY_ID;
-      overlay.className = 'snipe-editor-overlay';
-      overlay.innerHTML = html;
+      // Create overlay from HTML
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = html;
+      const overlay = wrapper.firstElementChild;
       
       // Add CSS
       const style = document.createElement('style');
@@ -151,8 +150,26 @@
     stickers.forEach((sticker, index) => {
       if (!sticker.img) return;
       
+      ctx.save();
+      
+      // Apply opacity
+      if (sticker.opacity !== undefined) {
+        ctx.globalAlpha = sticker.opacity;
+      }
+      
+      // Apply rotation
+      if (sticker.rotation && sticker.rotation !== 0) {
+        const centerX = sticker.x + sticker.w / 2;
+        const centerY = sticker.y + sticker.h / 2;
+        ctx.translate(centerX, centerY);
+        ctx.rotate((sticker.rotation * Math.PI) / 180);
+        ctx.translate(-centerX, -centerY);
+      }
+      
       // Draw sticker
       ctx.drawImage(sticker.img, sticker.x, sticker.y, sticker.w, sticker.h);
+      
+      ctx.restore();
       
       // Draw selection border if selected
       if (sticker.selected) {
@@ -296,7 +313,9 @@
       const y = (canvas.height - h) / 2 + (Math.random() - 0.5) * 100;
       
       const sticker = {
-        img, x, y, w, h, selected: true, name
+        img, x, y, w, h, selected: true, name,
+        opacity: 1.0,
+        rotation: 0
       };
       
       // Deselect all other stickers
@@ -306,6 +325,8 @@
       activeSticker = sticker;
       
       drawCanvas();
+      updateStickerCount();
+      showPropertiesPanel();
       console.log('✅ Added sticker:', name);
     } catch (error) {
       console.error('❌ Failed to add sticker:', error);
@@ -357,8 +378,10 @@
       dragging = true;
       dragOffset.x = x - hitSticker.x;
       dragOffset.y = y - hitSticker.y;
+      showPropertiesPanel();
     } else {
       activeSticker = null;
+      hidePropertiesPanel();
     }
     
     drawCanvas();
@@ -397,7 +420,158 @@
         activeSticker = null;
       }
       drawCanvas();
+      updateStickerCount();
       console.log('✅ Sticker deleted');
+    }
+  }
+
+  function clearAllStickers() {
+    if (stickers.length === 0) return;
+    
+    if (confirm(`Are you sure you want to remove all ${stickers.length} stickers?`)) {
+      stickers.length = 0;
+      activeSticker = null;
+      drawCanvas();
+      updateStickerCount();
+      hidePropertiesPanel();
+      console.log('✅ All stickers cleared');
+    }
+  }
+
+  function duplicateSelectedSticker() {
+    if (!activeSticker) {
+      alert('Please select a sticker to duplicate');
+      return;
+    }
+    
+    if (stickers.length >= MAX_STICKERS) {
+      alert(`Maximum ${MAX_STICKERS} stickers allowed`);
+      return;
+    }
+    
+    const duplicate = {
+      img: activeSticker.img,
+      x: activeSticker.x + 20,
+      y: activeSticker.y + 20,
+      w: activeSticker.w,
+      h: activeSticker.h,
+      selected: true,
+      name: activeSticker.name + ' (Copy)'
+    };
+    
+    // Deselect all stickers
+    stickers.forEach(s => s.selected = false);
+    
+    stickers.push(duplicate);
+    activeSticker = duplicate;
+    
+    drawCanvas();
+    updateStickerCount();
+    console.log('✅ Sticker duplicated');
+  }
+
+  function handleSizeChange(e) {
+    if (!activeSticker) return;
+    
+    const scale = e.target.value / 100;
+    const originalSize = Math.min(baseImg.width, baseImg.height) * 0.2;
+    const newSize = originalSize * scale;
+    
+    const aspectRatio = activeSticker.img.width / activeSticker.img.height;
+    if (aspectRatio > 1) {
+      activeSticker.w = newSize;
+      activeSticker.h = newSize / aspectRatio;
+    } else {
+      activeSticker.h = newSize;
+      activeSticker.w = newSize * aspectRatio;
+    }
+    
+    drawCanvas();
+    updateSizeValue(scale);
+  }
+
+  function handleOpacityChange(e) {
+    if (!activeSticker) return;
+    
+    const opacity = e.target.value / 100;
+    activeSticker.opacity = opacity;
+    
+    drawCanvas();
+    updateOpacityValue(opacity);
+  }
+
+  function handleRotationChange(e) {
+    if (!activeSticker) return;
+    
+    const rotation = e.target.value;
+    activeSticker.rotation = rotation;
+    
+    drawCanvas();
+    updateRotationValue(rotation);
+  }
+
+  function updateStickerCount() {
+    const countElement = document.getElementById('sticker-count');
+    if (countElement) {
+      countElement.textContent = `${stickers.length} stickers`;
+    }
+  }
+
+  function updateSizeValue(scale) {
+    const sizeValue = document.getElementById('size-value');
+    if (sizeValue) {
+      sizeValue.textContent = Math.round(scale * 100) + '%';
+    }
+  }
+
+  function updateOpacityValue(opacity) {
+    const opacityValue = document.getElementById('opacity-value');
+    if (opacityValue) {
+      opacityValue.textContent = Math.round(opacity * 100) + '%';
+    }
+  }
+
+  function updateRotationValue(rotation) {
+    const rotationValue = document.getElementById('rotation-value');
+    if (rotationValue) {
+      rotationValue.textContent = rotation + '°';
+    }
+  }
+
+  function showPropertiesPanel() {
+    const propertiesPanel = document.getElementById('sticker-properties');
+    if (propertiesPanel && activeSticker) {
+      propertiesPanel.style.display = 'block';
+      
+      // Update sliders to match current sticker values
+      const sizeSlider = document.getElementById('size-slider');
+      const opacitySlider = document.getElementById('opacity-slider');
+      const rotationSlider = document.getElementById('rotation-slider');
+      
+      if (sizeSlider) {
+        const originalSize = Math.min(baseImg.width, baseImg.height) * 0.2;
+        const currentSize = Math.max(activeSticker.w, activeSticker.h);
+        const scale = Math.round((currentSize / originalSize) * 100);
+        sizeSlider.value = Math.max(10, Math.min(200, scale));
+        updateSizeValue(scale / 100);
+      }
+      
+      if (opacitySlider) {
+        opacitySlider.value = Math.round((activeSticker.opacity || 1) * 100);
+        updateOpacityValue(activeSticker.opacity || 1);
+      }
+      
+      if (rotationSlider) {
+        rotationSlider.value = activeSticker.rotation || 0;
+        updateRotationValue(activeSticker.rotation || 0);
+      }
+    }
+  }
+
+  function hidePropertiesPanel() {
+    const propertiesPanel = document.getElementById('sticker-properties');
+    if (propertiesPanel) {
+      propertiesPanel.style.display = 'none';
     }
   }
 
@@ -425,10 +599,23 @@
     const saveBtn = document.getElementById('btn-save-edit');
     const cancelBtn = document.getElementById('btn-cancel-edit');
     const uploadBtn = document.getElementById('sticker-upload');
+    const clearAllBtn = document.getElementById('btn-clear-all');
+    const duplicateBtn = document.getElementById('btn-duplicate');
     
     if (saveBtn) saveBtn.onclick = saveEditedImage;
     if (cancelBtn) cancelBtn.onclick = () => closeEditor(false);
     if (uploadBtn) uploadBtn.onchange = handleStickerUpload;
+    if (clearAllBtn) clearAllBtn.onclick = clearAllStickers;
+    if (duplicateBtn) duplicateBtn.onclick = duplicateSelectedSticker;
+    
+    // Property controls
+    const sizeSlider = document.getElementById('size-slider');
+    const opacitySlider = document.getElementById('opacity-slider');
+    const rotationSlider = document.getElementById('rotation-slider');
+    
+    if (sizeSlider) sizeSlider.oninput = handleSizeChange;
+    if (opacitySlider) opacitySlider.oninput = handleOpacityChange;
+    if (rotationSlider) rotationSlider.oninput = handleRotationChange;
     
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyDown);
