@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "eBay Snipping Tool",
+  "version": "1.2",
+  "description": "Scrapes and watermarks Amazon product data to streamline the eBay listing process.",
+  "permissions": [
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.ebay.com/sl/prelist/*",
+    "https://www.ebay.com/lstng*",
+    "https://www.amazon.com/*",
+    "https://www.amazon.co.uk/*",
+    "https://www.amazon.de/*",
+    "https://www.amazon.ca/*",
+    "https://www.amazon.com.au/*",
+    "https://gemini.google.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "eBay Snipping Tool",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://www.amazon.com/*", "*://www.amazon.co.uk/*", "*://www.amazon.de/*", "*://www.amazon.ca/*", "*://www.amazon.com.au/*"],
+      "js": ["content_scripts/amazon_injector.js"],
+      "css": ["ui/panel.css"]
+    },
+    {
+      "matches": ["*://www.ebay.com/sl/prelist/*", "*://www.ebay.com/lstng*"],
+      "js": ["src/automation-clean.js", "content_scripts/ebay_lister.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "ui/panel.html",
+        "assets/watermark.png",
+        "src/image-uploader.js",
+        "src/item-filler.js",
+        "content_scripts/description_paster.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

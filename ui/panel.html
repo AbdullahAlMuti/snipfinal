@@ -1,0 +1,81 @@
+<div class="snipe-container" id="snipe-main-container">
+    
+    <div class="snipe-image-gallery" id="snipe-image-gallery">
+        </div>
+        <div class="image-controls" style="margin-bottom: 10px;">
+            <button class="snipe-btn" id="refresh-images-btn">Refresh Images</button>
+            <button class="snipe-btn snipe-btn-download" id="download-images-btn">Download All Images</button>
+        </div>
+
+    <div class="snipe-title-list" id="snipe-title-list">
+        </div>
+    
+    <div class="snipe-controls">
+        <button class="snipe-btn snipe-btn-action" id="snipe-title-btn">Snipe Title</button>
+        <button class="snipe-btn snipe-btn-action" id="opti-list-btn">Opti-List</button>
+        <button class="snipe-btn snipe-btn-copy" id="copy-btn">📋 Copy</button>
+        <button class="snipe-btn snipe-btn-description" id="new-description-btn">Description</button>
+        <button class="snipe-btn snipe-btn-details" id="product-details-btn">📋 Product Details</button>
+        <button class="snipe-btn snipe-btn-calculator" id="calculator-btn">💰 Calculator</button>
+        <button class="snipe-btn snipe-btn-quick-calc" id="quick-calc-btn" title="Quick Calculate">💲</button>
+        <div class="compact-input-group">
+            <div class="input-field price-field">
+                <input type="text" value="219.99" placeholder="💰 Sell it for" aria-label="Sell it for price">
+            </div>
+            <div class="input-field sku-field">
+                <select id="sku-prefix" aria-label="SKU prefix">
+                    <option value="AB">AB</option>
+                    <option value="RC">RC</option>
+                </select>
+                <input type="text" id="sku-input" placeholder="🏷️ SKU" readonly aria-label="Generated SKU">
+            </div>
+            <button id="generate-sku-btn" class="snipe-btn snipe-btn-generate" title="Generate SKU">Generate</button>
+        </div>
+    </div>
+</div>
+
+<!-- Calculator Popup -->
+<div id="calculator-popup" class="calculator-popup" style="display: none;">
+    <div class="calculator-overlay"></div>
+    <div class="calculator-modal">
+        <div class="calculator-header">
+            <h3>💰 eBay Price Calculator</h3>
+            <button class="calculator-close" id="calculator-close-btn">×</button>
+        </div>
+        <div class="calculator-content">
+            <div class="calculator-form">
+                <div class="calculator-row">
+                    <label for="amazon-price">Amazon Price:</label>
+                    <input type="number" id="amazon-price" step="0.01" placeholder="0.00">
+                </div>
+                <div class="calculator-row">
+                    <label for="tax-percent">Tax %:</label>
+                    <input type="number" id="tax-percent" value="9" step="0.1" placeholder="9">
+                </div>
+                <div class="calculator-row">
+                    <label for="tracking-fee">Tracking Fee:</label>
+                    <input type="number" id="tracking-fee" value="0.20" step="0.01" placeholder="0.20">
+                </div>
+                <div class="calculator-row">
+                    <label for="ebay-fee-percent">eBay Fee %:</label>
+                    <input type="number" id="ebay-fee-percent" value="20" step="0.1" placeholder="20">
+                </div>
+                <div class="calculator-row">
+                    <label for="promo-fee-percent">Promotional Fee %:</label>
+                    <input type="number" id="promo-fee-percent" value="10" step="0.1" placeholder="10">
+                </div>
+                <div class="calculator-row">
+                    <label for="desired-profit">Desired Profit %:</label>
+                    <input type="number" id="desired-profit" step="0.1" placeholder="0">
+                </div>
+                <div class="calculator-actions">
+                    <button class="snipe-btn snipe-btn-action" id="calculate-btn" style="opacity: 0.7;">Calculate (Auto-updates)</button>
+                </div>
+            </div>
+            <div class="calculator-result" id="calculator-result" style="display: none;">
+                <div class="result-header">Final eBay Price:</div>
+                <div class="result-price" id="final-price">$0.00</div>
+            </div>
+        </div>
+    </div>
+</div>
