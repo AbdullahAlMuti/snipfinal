@@ -1,5 +1,172 @@
 console.log("eBay Lister script loaded: Awaiting data...");
 
+// Message listener for RUN_EBAY_LISTER
+chrome.runtime.onMessage.addListener(async (request) => {
+  if (request.action === "RUN_EBAY_LISTER") {
+    console.log("🎯 RUN_EBAY_LISTER received, starting automation...");
+    console.log("🔗 Current URL:", window.location.href);
+    
+    // Wait a bit for page to fully load
+    await wait(2000);
+    
+    const data = await chrome.storage.local.get([
+      "productTitle",
+      "ebayPrice", 
+      "imageUrls",
+      "pricingConfig",
+      "amazonPrice",
+      "ebayTitle",
+      "watermarkedImages"
+    ]);
+
+    console.log("📦 Retrieved data from storage:", data);
+
+    // Fallback price calculation (only if ebayPrice is missing)
+    let finalPrice = data.ebayPrice;
+    if (!finalPrice && data.pricingConfig && data.amazonPrice) {
+      const { tax, trackingCost, ebayFee, promo, profit } = data.pricingConfig;
+      finalPrice = (data.amazonPrice + trackingCost) * (1 + tax + ebayFee + profit - promo);
+      finalPrice = finalPrice.toFixed(2);
+    }
+
+    // Use watermarkedImages if available, otherwise fallback to imageUrls
+    const images = data.watermarkedImages && data.watermarkedImages.length > 0 
+      ? data.watermarkedImages 
+      : data.imageUrls;
+
+    // Stop execution if data or images are missing
+    if (!data.productTitle && !data.ebayTitle) {
+      console.error("❌ No stored product title. Need to run List-It first.");
+      return;
+    }
+
+    if (!images || images.length === 0) {
+      console.error("❌ No stored images. Need to run List-It first.");
+      return;
+    }
+
+    const title = data.ebayTitle || data.productTitle;
+    
+    // Try to fill form fields with retry logic
+    await fillFormFields(title, finalPrice, images[0]);
+
+    console.log("✅ eBay automation completed");
+  }
+});
+
+// Enhanced form filling function with retry logic
+async function fillFormFields(title, finalPrice, firstImage) {
+  console.log("🔧 Starting form filling process...");
+  
+  // Try multiple times with different strategies
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    console.log(`🔄 Attempt ${attempt}/3`);
+    
+    // Fill Title - try multiple selectors for different eBay page types
+    let titleInput = document.querySelector("#editpane_title") || 
+                    document.querySelector('input[name="title"]') ||
+                    document.querySelector('input[placeholder*="title" i]') ||
+                    document.querySelector('input[data-testid*="title" i]') ||
+                    document.querySelector('input[aria-label*="title" i]') ||
+                    document.querySelector('input[type="text"]:not([readonly])');
+    
+    if (titleInput) {
+      titleInput.focus();
+      titleInput.value = '';
+      await wait(100);
+      titleInput.value = title;
+      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
+      titleInput.dispatchEvent(new Event('change', { bubbles: true }));
+      titleInput.dispatchEvent(new Event('blur', { bubbles: true }));
+      console.log("✅ Title filled:", title);
+    } else {
+      console.warn("⚠️ Title input not found. Available inputs:", 
+        Array.from(document.querySelectorAll('input[type="text"]')).map(i => ({
+          id: i.id, 
+          name: i.name, 
+          placeholder: i.placeholder,
+          'aria-label': i.getAttribute('aria-label'),
+          value: i.value
+        }))
+      );
+    }
+
+    // Fill Price - try multiple selectors
+    let priceInput = document.querySelector("#binPrice") ||
+                    document.querySelector('input[name*="price" i]') ||
+                    document.querySelector('input[placeholder*="price" i]') ||
+                    document.querySelector('input[data-testid*="price" i]') ||
+                    document.querySelector('input[aria-label*="price" i]') ||
+                    document.querySelector('input[type="number"]');
+    
+    if (priceInput && finalPrice) {
+      priceInput.focus();
+      priceInput.value = '';
+      await wait(100);
+      priceInput.value = finalPrice;
+      priceInput.dispatchEvent(new Event('input', { bubbles: true }));
+      priceInput.dispatchEvent(new Event('change', { bubbles: true }));
+      priceInput.dispatchEvent(new Event('blur', { bubbles: true }));
+      console.log("✅ Price filled:", finalPrice);
+    } else {
+      console.warn("⚠️ Price input not found or no price data. Available inputs:", 
+        Array.from(document.querySelectorAll('input[type="text"], input[type="number"]')).map(i => ({
+          id: i.id, 
+          name: i.name, 
+          placeholder: i.placeholder,
+          'aria-label': i.getAttribute('aria-label'),
+          value: i.value
+        }))
+      );
+    }
+
+    // Upload first image - try multiple selectors
+    let uploader = document.querySelector('input[type="file"][multiple]') ||
+                  document.querySelector('input[type="file"]') ||
+                  document.querySelector('input[accept*="image"]') ||
+                  document.querySelector('input[data-testid*="upload" i]') ||
+                  document.querySelector('input[aria-label*="upload" i]');
+    
+    if (uploader && firstImage) {
+      try {
+        console.log("🖼️ Attempting to upload image:", firstImage);
+        
+        const blob = await fetch(firstImage).then(r => r.blob());
+        const file = new File([blob], "main.jpg", { type: blob.type });
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        uploader.files = dt.files;
+        uploader.dispatchEvent(new Event('change', { bubbles: true }));
+        uploader.dispatchEvent(new Event('input', { bubbles: true }));
+        console.log("✅ First image uploaded:", firstImage);
+      } catch (error) {
+        console.error("❌ Failed to upload image:", error);
+      }
+    } else {
+      console.warn("⚠️ Image uploader not found or no images available. Available file inputs:", 
+        Array.from(document.querySelectorAll('input[type="file"]')).map(i => ({
+          id: i.id, 
+          name: i.name, 
+          accept: i.accept,
+          multiple: i.multiple,
+          'aria-label': i.getAttribute('aria-label')
+        }))
+      );
+    }
+    
+    // If we found and filled at least the title, break
+    if (titleInput) {
+      break;
+    }
+    
+    // Wait before next attempt
+    if (attempt < 3) {
+      console.log("⏳ Waiting before retry...");
+      await wait(2000);
+    }
+  }
+}
+
 // Helper function to avoid conflicts with other scripts
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 

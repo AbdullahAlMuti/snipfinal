@@ -32,7 +32,7 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["*://www.ebay.com/sl/prelist/*", "*://www.ebay.com/lstng*"],
+      "matches": ["*://www.ebay.com/*/sell*", "*://www.ebay.com/sl/*"],
       "js": ["src/automation-clean.js", "content_scripts/ebay_lister.js"],
       "run_at": "document_idle"
     }

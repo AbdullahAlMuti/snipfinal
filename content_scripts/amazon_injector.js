@@ -1334,13 +1334,14 @@ const addEventListenersToPanel = () => {
                     await storeWatermarkedImages();
 
                     const listingData = {
+                        productTitle: selectedTitle,
                         ebayTitle: selectedTitle,
                         ebaySku: sku,
                         ebayPrice: price,
                         ...productDetails
                     };
 
-                    // Save to Chrome storage with explicit SKU key
+                    // Save to Chrome storage with explicit keys
                     await chrome.storage.local.set(listingData);
                     console.log('✅ All listing data saved:', listingData);
                     console.log('🏷️ SKU saved to storage:', sku);
@@ -1390,7 +1391,7 @@ const addEventListenersToPanel = () => {
                         btn.textContent = '⚠️ Saved (Sheets failed)';
                     }
 
-                    chrome.runtime.sendMessage({ action: "startOptiList", title: selectedTitle });
+                    chrome.runtime.sendMessage({ action: "START_OPTILIST", title: selectedTitle });
                 } catch (error) {
                     console.error('Error in Opti-List process:', error);
                     btn.disabled = false;

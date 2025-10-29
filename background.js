@@ -2,7 +2,7 @@
 
 // Listens for the message from the Amazon content script to start the eBay process.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "startOptiList") {
+  if (request.action === "START_OPTILIST") {
     
     // 1. Save the selected title and condition to chrome.storage.local.
     const storageData = { 
@@ -15,6 +15,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
           if (tabId === tab.id && info.status === 'complete') {
             chrome.tabs.onUpdated.removeListener(listener);
+            
+            // Send RUN_EBAY_LISTER message to the eBay tab
+            setTimeout(() => {
+              chrome.tabs.sendMessage(tab.id, { action: "RUN_EBAY_LISTER" }, (response) => {
+                if (chrome.runtime.lastError) {
+                  console.error("Error sending RUN_EBAY_LISTER:", chrome.runtime.lastError);
+                } else {
+                  console.log("✅ RUN_EBAY_LISTER sent successfully");
+                }
+              });
+            }, 2000); // Wait 2 seconds for page to fully load
+            
             sendResponse({ success: true, message: "Automation ready" });
           }
         });
