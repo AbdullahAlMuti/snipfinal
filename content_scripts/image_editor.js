@@ -29,28 +29,18 @@ const STICKERS = [
 
 // Public API - Make sure this is globally accessible
 window.openImageEditor = async function(options) {
-    console.log('🎨 Opening image editor with options:', options);
+    console.log('🧩 openImageEditor triggered for image:', options.src);
     
-    // Test popup first
-    console.log('🧪 Testing popup visibility...');
-    document.body.insertAdjacentHTML('beforeend', '<div id="test-popup" style="position:fixed;inset:0;z-index:999999;background:red;color:white;display:flex;align-items:center;justify-content:center;font-size:24px;">TEST POPUP - Click to close</div>');
-    
-    const testPopup = document.getElementById('test-popup');
-    testPopup.onclick = () => {
-        testPopup.remove();
-        console.log('✅ Test popup removed, proceeding with editor...');
-        
-        if (editorState.isOpen) {
-            console.log('⚠️ Editor already open, closing first');
-            closeEditor();
-        }
+    if (editorState.isOpen) {
+        console.log('⚠️ Editor already open, closing first');
+        closeEditor();
+    }
 
-        try {
-            initializeEditor(options);
-        } catch (error) {
-            console.error('❌ Failed to initialize editor:', error);
-        }
-    };
+    try {
+        await initializeEditor(options);
+    } catch (error) {
+        console.error('❌ Failed to initialize editor:', error);
+    }
 };
 
 // Initialize editor
@@ -94,33 +84,44 @@ async function loadEditorPopup() {
     }
 
     console.log('📄 Fetching editor popup HTML...');
-    // Load HTML
-    const htmlResponse = await fetch(chrome.runtime.getURL('ui/editor-popup.html'));
-    const htmlContent = await htmlResponse.text();
-    console.log('✅ HTML fetched successfully');
+    
+    try {
+        const htmlUrl = chrome.runtime.getURL('ui/editor-popup.html');
+        const cssUrl = chrome.runtime.getURL('ui/editor-popup.css');
+        
+        console.log('🔗 HTML URL:', htmlUrl);
+        console.log('🔗 CSS URL:', cssUrl);
+        
+        // Load HTML
+        const response = await fetch(htmlUrl);
+        if (!response.ok) throw new Error('Failed to load editor-popup.html');
+        const html = await response.text();
+        console.log('✅ HTML fetched successfully');
+        
+        // Create wrapper and inject HTML
+        const wrapper = document.createElement('div');
+        wrapper.id = 'snipe-editor-overlay';
+        wrapper.innerHTML = html;
+        document.body.appendChild(wrapper);
+        console.log('✅ HTML injected into body');
 
-    console.log('📄 Fetching editor popup CSS...');
-    // Load CSS
-    const cssResponse = await fetch(chrome.runtime.getURL('ui/editor-popup.css'));
-    const cssContent = await cssResponse.text();
-    console.log('✅ CSS fetched successfully');
+        // Load CSS
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = cssUrl;
+        document.head.appendChild(link);
+        console.log('✅ CSS link added to head');
 
-    // Create style element
-    const style = document.createElement('style');
-    style.textContent = cssContent;
-    document.head.appendChild(style);
-    console.log('✅ CSS injected into head');
-
-    // Create overlay
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    editorState.overlay = tempDiv.firstElementChild;
-    document.body.appendChild(editorState.overlay);
-    console.log('✅ Overlay added to body');
-
-    // Get popup reference
-    editorState.popup = editorState.overlay.querySelector('.snipe-editor-popup');
-    console.log('✅ Popup references created');
+        // Get references
+        editorState.overlay = document.getElementById('snipe-editor-overlay');
+        editorState.popup = editorState.overlay.querySelector('.snipe-editor-popup');
+        
+        console.log('✅ Editor popup successfully injected');
+        
+    } catch (err) {
+        console.error('❌ Failed to load popup:', err);
+        throw err;
+    }
 }
 
 // Show overlay
@@ -140,6 +141,11 @@ function showOverlay() {
 function setupCanvas() {
     editorState.canvas = document.getElementById('snipe-editor-canvas');
     editorState.ctx = editorState.canvas.getContext('2d');
+    
+    if (!editorState.canvas) {
+        console.error('❌ Canvas element not found');
+        return;
+    }
     
     // Set canvas size for display (scaled down)
     const container = editorState.canvas.parentElement;
