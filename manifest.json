@@ -26,7 +26,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.amazon.*/*", "*://amazon.*/*"],
+      "matches": ["*://www.amazon.com/*", "*://www.amazon.co.uk/*", "*://www.amazon.de/*", "*://www.amazon.ca/*", "*://www.amazon.com.au/*"],
       "js": ["content_scripts/amazon_injector.js", "content_scripts/image_editor.js"],
       "css": ["ui/panel.css"],
       "run_at": "document_idle"
@@ -49,7 +49,7 @@
         "src/item-filler.js",
         "content_scripts/description_paster.js"
       ],
-      "matches": ["*://*.amazon.*/*", "*://amazon.*/*"]
+      "matches": ["*://www.amazon.com/*", "*://www.amazon.co.uk/*", "*://www.amazon.de/*", "*://www.amazon.ca/*", "*://www.amazon.com.au/*"]
     }
   ],
   "icons": {
