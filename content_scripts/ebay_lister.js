@@ -6,12 +6,12 @@ console.log("eBay Lister script loaded: Awaiting data...");
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function waitForElement(selector, timeout = 10000) {
-  const startTime = Date.now();
-  while (Date.now() - startTime < timeout) {
+    const startTime = Date.now();
+    while (Date.now() - startTime < timeout) {
     const el = document.querySelector(selector);
     if (el) return el;
-    await wait(250);
-  }
+        await wait(250);
+    }
   throw new Error(`Element with selector "${selector}" not found`);
 }
 
@@ -22,10 +22,10 @@ async function runEbayAutomation(data) {
   console.log("🚀 Starting eBay automation with data:", data);
 
   // 1️⃣ Fill Title
-  if (data.ebayTitle) {
+    if (data.ebayTitle) {
     try {
       console.log("📝 Filling title...");
-      const titleSelectors = [
+    const titleSelectors = [
         'input[name="title"]',
         'input[id*="keyword"]',
         'input[aria-label*="title"]'
@@ -43,7 +43,7 @@ async function runEbayAutomation(data) {
           titleInput.dispatchEvent(new Event(eventType, { bubbles: true }))
         );
         console.log("✅ Title filled:", data.ebayTitle);
-      } else {
+        } else {
         console.error("❌ Title input not found");
       }
     } catch (err) {
@@ -57,23 +57,67 @@ async function runEbayAutomation(data) {
       console.log("💰 Filling price...");
       const priceSelectors = [
         'input[name="price"]',
-        'input[type="text"][aria-describedby*="price"]'
+        'input[type="text"][aria-describedby*="price"]',
+        'input[type="text"][aria-describedby*="prefix"]',
+        'input[id*="@PRICE"]',
+        'input.textbox__control[name="price"]',
+        'input[aria-label*="price"]',
+        'input[placeholder*="price"]'
       ];
       
       let priceInput = null;
       for (const selector of priceSelectors) {
         priceInput = document.querySelector(selector);
-        if (priceInput) break;
-      }
-      
+        if (priceInput && priceInput.type === 'text') {
+          console.log(`✅ Found price input with selector: ${selector}`);
+                                break;
+        }
+    }
+
       if (priceInput) {
         priceInput.value = data.ebayPrice;
-        ["input", "change", "blur"].forEach((eventType) =>
+        ["input", "change", "blur", "keyup"].forEach((eventType) =>
           priceInput.dispatchEvent(new Event(eventType, { bubbles: true }))
         );
         console.log("✅ Price filled:", data.ebayPrice);
-      } else {
-        console.error("❌ Price input not found");
+            } else {
+        // Fallback: Search by label text
+        console.log("🔍 Trying fallback method: searching by label text...");
+        const labels = document.querySelectorAll('label');
+        for (const label of labels) {
+          const labelText = label.textContent?.toLowerCase() || '';
+          if (labelText.includes('price') || labelText.includes('cost')) {
+            const forAttr = label.getAttribute('for');
+            if (forAttr) {
+              priceInput = document.getElementById(forAttr);
+              if (priceInput && priceInput.type === 'text') {
+                console.log(`✅ Found price input via label: "${labelText}"`);
+            break;
+        }
+            }
+          }
+        }
+        
+        if (priceInput) {
+          priceInput.value = data.ebayPrice;
+          ["input", "change", "blur", "keyup"].forEach((eventType) =>
+            priceInput.dispatchEvent(new Event(eventType, { bubbles: true }))
+          );
+          console.log("✅ Price filled via fallback:", data.ebayPrice);
+        } else {
+          console.error("❌ Price input not found");
+          // Debug: List all text inputs on the page
+          const allTextInputs = document.querySelectorAll('input[type="text"]');
+          console.log(`🔍 Found ${allTextInputs.length} text inputs on page:`, 
+            Array.from(allTextInputs).map(input => ({
+              name: input.name,
+              id: input.id,
+              placeholder: input.placeholder,
+              ariaLabel: input.getAttribute('aria-label'),
+              className: input.className
+            }))
+          );
+        }
       }
     } catch (err) {
       console.error("❌ Price fill failed:", err);
@@ -86,23 +130,68 @@ async function runEbayAutomation(data) {
       console.log("🏷️ Filling SKU...");
       const skuSelectors = [
         'input[name="customLabel"]',
-        'input[id*="CUSTOMLABEL"]'
+        'input[id*="CUSTOMLABEL"]',
+        'input[id*="@TITLE"]',
+        'input[aria-describedby*="counter"]',
+        'input[aria-label*="custom"]',
+        'input[aria-label*="sku"]',
+        'input[placeholder*="custom"]',
+        'input[placeholder*="sku"]'
       ];
       
       let skuInput = null;
       for (const selector of skuSelectors) {
         skuInput = document.querySelector(selector);
-        if (skuInput) break;
+        if (skuInput && skuInput.type === 'text') {
+          console.log(`✅ Found SKU input with selector: ${selector}`);
+          break;
+        }
       }
-      
+    
       if (skuInput) {
         skuInput.value = data.ebaySku;
-        ["input", "change", "blur"].forEach((eventType) =>
+        ["input", "change", "blur", "keyup"].forEach((eventType) =>
           skuInput.dispatchEvent(new Event(eventType, { bubbles: true }))
         );
         console.log("✅ SKU filled:", data.ebaySku);
-      } else {
-        console.error("❌ SKU input not found");
+            } else {
+        // Fallback: Search by label text
+        console.log("🔍 Trying fallback method: searching by label text...");
+        const labels = document.querySelectorAll('label');
+        for (const label of labels) {
+          const labelText = label.textContent?.toLowerCase() || '';
+          if (labelText.includes('custom label') || labelText.includes('sku') || labelText.includes('identifier')) {
+            const forAttr = label.getAttribute('for');
+            if (forAttr) {
+              skuInput = document.getElementById(forAttr);
+              if (skuInput && skuInput.type === 'text') {
+                console.log(`✅ Found SKU input via label: "${labelText}"`);
+            break;
+        }
+    }
+          }
+        }
+        
+        if (skuInput) {
+          skuInput.value = data.ebaySku;
+          ["input", "change", "blur", "keyup"].forEach((eventType) =>
+            skuInput.dispatchEvent(new Event(eventType, { bubbles: true }))
+          );
+          console.log("✅ SKU filled via fallback:", data.ebaySku);
+    } else {
+          console.error("❌ SKU input not found");
+          // Debug: List all text inputs on the page
+          const allTextInputs = document.querySelectorAll('input[type="text"]');
+          console.log(`🔍 Found ${allTextInputs.length} text inputs on page:`, 
+            Array.from(allTextInputs).map(input => ({
+              name: input.name,
+              id: input.id,
+              placeholder: input.placeholder,
+              ariaLabel: input.getAttribute('aria-label'),
+              className: input.className
+            }))
+          );
+        }
       }
     } catch (err) {
       console.error("❌ SKU fill failed:", err);
@@ -138,9 +227,9 @@ chrome.runtime.onMessage.addListener(async (request) => {
 
     if (!data.ebayTitle && !data.productTitle) {
       console.error("❌ No stored product title. Need to run List-It first.");
-      return;
+        return;
     }
-
+    
     const title = data.ebayTitle || data.productTitle;
     
     await runEbayAutomation({
@@ -157,5 +246,5 @@ chrome.runtime.onMessage.addListener(async (request) => {
 // 🔁 Auto Start
 // ─────────────────────────────────────────────
 setTimeout(() => {
-  console.log("🚀 Starting eBay Lister initialization...");
+    console.log("🚀 Starting eBay Lister initialization...");
 }, 1000);
