@@ -188,25 +188,43 @@
       ctx.restore();
       
       // Draw selection border if selected
-      if (sticker.selected) {
-        ctx.strokeStyle = '#0073c4';
+      if (sticker.selected && !window.__SNIPE_SAVING__) {
+        ctx.save();
+        ctx.strokeStyle = '#00b3ff';
         ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
+        ctx.setLineDash([6, 4]);
         ctx.strokeRect(sticker.x - 2, sticker.y - 2, sticker.w + 4, sticker.h + 4);
         ctx.setLineDash([]);
-        
-        // Draw resize handles
+
+        // glow highlight
+        ctx.shadowColor = 'rgba(0,179,255,0.4)';
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+
+        // Resize handle
         const handleSize = 8;
-        ctx.fillStyle = '#0073c4';
-        ctx.fillRect(sticker.x + sticker.w - handleSize/2, sticker.y + sticker.h - handleSize/2, handleSize, handleSize);
-        
-        // Draw delete button
+        ctx.fillStyle = '#00b3ff';
+        ctx.fillRect(
+          sticker.x + sticker.w - handleSize / 2,
+          sticker.y + sticker.h - handleSize / 2,
+          handleSize,
+          handleSize
+        );
+
+        // Delete button
+        ctx.shadowBlur = 0;
         ctx.fillStyle = '#ff4444';
-        ctx.fillRect(sticker.x - handleSize/2, sticker.y - handleSize/2, handleSize, handleSize);
+        ctx.fillRect(
+          sticker.x - handleSize / 2,
+          sticker.y - handleSize / 2,
+          handleSize,
+          handleSize
+        );
         ctx.fillStyle = '#fff';
         ctx.font = '10px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('×', sticker.x + handleSize/2, sticker.y + handleSize/2 + 3);
+        ctx.fillText('×', sticker.x + handleSize / 2, sticker.y + handleSize / 2 + 3);
+        ctx.restore();
       }
     });
   }
@@ -668,8 +686,11 @@
   async function saveEditedImage() {
     try {
       console.log('💾 Saving edited image...');
-      
+      window.__SNIPE_SAVING__ = true;
+      drawCanvas();
+
       const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      window.__SNIPE_SAVING__ = false;
       
       // Update the image in the UI
       const container = document.querySelector(`.product-image-container[data-image-index="${currentIndex}"]`);
