@@ -16,8 +16,12 @@ class SimpleItemFillerSystem {
         // STEP 1: Smart Wait for "Apply all" button (MOST IMPORTANT)
         await this.smartWaitForApplyAll();
 
-        // STEP 2: Find and click first suggestions
-        await this.findAndClickFirstSuggestions();
+        // STEP 2: Find and click first suggestions (only if explicitly enabled)
+        if (window.enableItemFillerSuggestions !== false) {
+            await this.findAndClickFirstSuggestions();
+        } else {
+            this.logger.info('ℹ️ Item filler suggestions disabled');
+        }
 
         // STEP 3: Fill description if available
         await this.fillDescription();
@@ -154,7 +158,10 @@ class SimpleItemFillerSystem {
                         // Human-like delay before moving to next legend
                         await this.sleep(1500);
                     } else {
-                        this.logger.warn(`⚠️ Could not click suggestion for legend: "${legendText}"`);
+                        // Only log warning for first few failures to reduce spam
+                        if (processedCount < 3) {
+                            this.logger.warn(`⚠️ Could not click suggestion for legend: "${legendText}"`);
+                        }
                     }
                     
                 } catch (error) {
@@ -321,7 +328,10 @@ class SimpleItemFillerSystem {
                 }
             }
             
-            this.logger.warn('⚠️ No suitable button found to click in fieldset');
+            // Only log warning occasionally to reduce spam
+            if (Math.random() < 0.3) {
+                this.logger.warn('⚠️ No suitable button found to click in fieldset');
+            }
             return false;
             
         } catch (error) {
@@ -429,6 +439,12 @@ class SimpleItemFillerSystem {
 
     const logger = window.logger || new Logger();
     logger.info('🚀 Simple Item Filler script loaded with "Find Keyword and Click First" algorithm.');
+
+    // Disable item filler suggestions by default to reduce console spam
+    if (window.enableItemFillerSuggestions === undefined) {
+        window.enableItemFillerSuggestions = false;
+        logger.info('ℹ️ Item filler suggestions disabled by default');
+    }
 
     // Smart timing: Wait for page to be fully interactive
     await new Promise(resolve => setTimeout(resolve, 4000));
