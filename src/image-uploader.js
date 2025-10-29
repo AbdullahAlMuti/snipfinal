@@ -10,9 +10,49 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Simple Logger class if global logger is not available
+class SimpleLogger {
+    constructor() {
+        this.config = { debug: true, logLevel: 'info' };
+    }
+    
+    _shouldLog(level) {
+        if (!this.config.debug && level === 'debug') return false;
+        const levels = { debug: 0, info: 1, warn: 2, error: 3 };
+        return levels[level] >= levels[this.config.logLevel];
+    }
+    
+    _log(level, message, data = null) {
+        if (!this._shouldLog(level)) return;
+        const timestamp = new Date().toISOString();
+        const prefix = `[${timestamp}] [IMG-UPLOAD]`;
+        const formattedMessage = `${prefix} [${level.toUpperCase()}] ${message}`;
+        
+        switch (level) {
+            case 'debug':
+                console.debug(formattedMessage, data || '');
+                break;
+            case 'info':
+                console.info(formattedMessage, data || '');
+                break;
+            case 'warn':
+                console.warn(formattedMessage, data || '');
+                break;
+            case 'error':
+                console.error(formattedMessage, data || '');
+                break;
+        }
+    }
+    
+    debug(message, data) { this._log('debug', message, data); }
+    info(message, data) { this._log('info', message, data); }
+    warn(message, data) { this._log('warn', message, data); }
+    error(message, data) { this._log('error', message, data); }
+}
+
 class ImageUploadSystem {
     constructor() {
-        this.logger = window.logger || new Logger(); // Use global logger if available
+        this.logger = window.logger || new SimpleLogger();
         this.isUploading = false;
         this.uploadStartTime = null;
         this.logger.info('✅ ImageUploadSystem initialized.');
@@ -83,11 +123,41 @@ class ImageUploadSystem {
 
     async getStoredImages() {
         return new Promise((resolve) => {
-            chrome.storage.local.get(['watermarkedImages'], (result) => {
-                const images = result.watermarkedImages || [];
-                const validImages = images.filter(img =>
-                    img && typeof img === 'string' && img.startsWith('data:image/') && img.length > 100000
-                );
+            chrome.storage.local.get(['watermarkedImages', 'imageUrls'], (result) => {
+                this.logger.info('🔍 Checking storage for images...');
+                this.logger.info('📦 Storage keys found:', Object.keys(result));
+                
+                // Try watermarkedImages first, then fallback to imageUrls
+                let images = result.watermarkedImages || result.imageUrls || [];
+                this.logger.info(`📸 Found ${images.length} total images in storage`);
+                
+                // Filter and validate images
+                const validImages = images.filter((img, index) => {
+                    if (!img || typeof img !== 'string') {
+                        this.logger.warn(`⚠️ Image ${index + 1} is not a valid string`);
+                        return false;
+                    }
+                    
+                    // Check if it's a data URL
+                    if (img.startsWith('data:image/')) {
+                        const isValidSize = img.length > 10000; // Reduced minimum size
+                        if (!isValidSize) {
+                            this.logger.warn(`⚠️ Image ${index + 1} data URL too small (${img.length} chars)`);
+                        }
+                        return isValidSize;
+                    }
+                    
+                    // Check if it's a regular URL
+                    if (img.startsWith('http')) {
+                        this.logger.info(`🌐 Image ${index + 1} is a URL: ${img.substring(0, 50)}...`);
+                        return true;
+                    }
+                    
+                    this.logger.warn(`⚠️ Image ${index + 1} has unknown format: ${img.substring(0, 50)}...`);
+                    return false;
+                });
+                
+                this.logger.info(`✅ Found ${validImages.length} valid images`);
                 resolve(validImages);
             });
         });
@@ -96,27 +166,73 @@ class ImageUploadSystem {
     async waitForUploaderReady() {
         const maxWaitTime = 20000; // 20 seconds
         const startTime = Date.now();
+        this.logger.info('🔍 Waiting for uploader UI to be ready...');
+        
         while (Date.now() - startTime < maxWaitTime) {
-            const fileInput = document.querySelector('input[type="file"]');
-            const dropZone = document.querySelector('[class*="dropzone"], [class*="upload-area"]');
-            if (fileInput || dropZone) {
-                return true;
+            // Multiple selectors for eBay upload areas
+            const uploadSelectors = [
+                'input[type="file"]',
+                'input[type="file"][multiple]',
+                '[class*="dropzone"]',
+                '[class*="upload-area"]',
+                '[class*="upload-zone"]',
+                '[class*="photo-upload"]',
+                '[class*="image-upload"]',
+                '[data-testid*="upload"]',
+                '[data-testid*="photo"]',
+                '[data-testid*="image"]',
+                '.photo-upload-area',
+                '.image-upload-area',
+                '.upload-dropzone'
+            ];
+            
+            for (const selector of uploadSelectors) {
+                const element = document.querySelector(selector);
+                if (element) {
+                    this.logger.info(`✅ Found upload element: ${selector}`);
+                    return true;
+                }
             }
+            
             await sleep(500);
         }
+        
+        this.logger.warn('⚠️ Uploader UI not ready within timeout');
         return false;
     }
 
-    async convertImagesToFiles(base64Images) {
+    async convertImagesToFiles(images) {
         const files = [];
-        for (let i = 0; i < base64Images.length; i++) {
+        this.logger.info(`🔄 Converting ${images.length} images to files...`);
+        
+        for (let i = 0; i < images.length; i++) {
             try {
-                const file = this.dataUrlToFile(base64Images[i], `product_image_${i + 1}.jpg`);
-                files.push(file);
+                const image = images[i];
+                let file;
+                
+                if (image.startsWith('data:image/')) {
+                    // Handle data URL
+                    this.logger.info(`📸 Converting data URL image ${i + 1}...`);
+                    file = this.dataUrlToFile(image, `product_image_${i + 1}.jpg`);
+                } else if (image.startsWith('http')) {
+                    // Handle regular URL - fetch and convert
+                    this.logger.info(`🌐 Fetching URL image ${i + 1}: ${image.substring(0, 50)}...`);
+                    file = await this.urlToFile(image, `product_image_${i + 1}.jpg`);
+                } else {
+                    this.logger.warn(`⚠️ Unknown image format for image ${i + 1}, skipping`);
+                    continue;
+                }
+                
+                if (file) {
+                    files.push(file);
+                    this.logger.info(`✅ Successfully converted image ${i + 1} (${file.size} bytes)`);
+                }
             } catch (error) {
                 this.logger.error(`❌ Failed to convert image ${i + 1} to file:`, error);
             }
         }
+        
+        this.logger.info(`✅ Converted ${files.length}/${images.length} images to files`);
         return files;
     }
 
@@ -130,6 +246,20 @@ class ImageUploadSystem {
             u8arr[n] = bstr.charCodeAt(n);
         }
         return new File([u8arr], filename, { type: mime });
+    }
+    
+    async urlToFile(url, filename) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const blob = await response.blob();
+            return new File([blob], filename, { type: blob.type });
+        } catch (error) {
+            this.logger.error(`❌ Failed to fetch URL ${url}:`, error);
+            return null;
+        }
     }
 
     async executeUploadStrategies(files) {
@@ -155,72 +285,187 @@ class ImageUploadSystem {
     }
 
     async strategyDirectFileInput(files) {
-        const fileInput = document.querySelector('input[type="file"]');
-        if (!fileInput) return false;
+        this.logger.info('🎯 Executing Direct File Input Strategy...');
+        
+        // Try multiple file input selectors
+        const fileInputSelectors = [
+            'input[type="file"][multiple]',
+            'input[type="file"]',
+            'input[type="file"][accept*="image"]',
+            'input[type="file"][name*="photo"]',
+            'input[type="file"][name*="image"]'
+        ];
+        
+        let fileInput = null;
+        for (const selector of fileInputSelectors) {
+            fileInput = document.querySelector(selector);
+            if (fileInput) {
+                this.logger.info(`✅ Found file input: ${selector}`);
+                break;
+            }
+        }
+        
+        if (!fileInput) {
+            this.logger.warn('⚠️ No file input found for direct strategy');
+            return false;
+        }
 
-        const dataTransfer = new DataTransfer();
-        files.forEach(file => dataTransfer.items.add(file));
+        try {
+            const dataTransfer = new DataTransfer();
+            files.forEach(file => dataTransfer.items.add(file));
 
-        // Directly assign the files
-        fileInput.files = dataTransfer.files;
+            // Directly assign the files
+            fileInput.files = dataTransfer.files;
+            this.logger.info(`📁 Assigned ${files.length} files to input`);
 
-        // Dispatch a 'change' event, which is what most frameworks listen for
-        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+            // Dispatch multiple events to ensure compatibility
+            const events = ['input', 'change', 'blur'];
+            events.forEach(eventType => {
+                fileInput.dispatchEvent(new Event(eventType, { bubbles: true }));
+            });
 
-        this.logger.info('Dispatched change event to file input.');
-        await sleep(2000); // Give the page time to react
-        return (await this.checkUploadProgress(files.length)) > 0;
+            this.logger.info('📡 Dispatched events to file input');
+            await sleep(3000); // Give the page time to react
+            
+            const progress = await this.checkUploadProgress(files.length);
+            this.logger.info(`📊 Upload progress check: ${progress} images detected`);
+            return progress > 0;
+        } catch (error) {
+            this.logger.error('❌ Error in direct file input strategy:', error);
+            return false;
+        }
     }
 
     async strategyDragAndDrop(files) {
-        const dropZone = document.querySelector('[class*="dropzone"], [class*="upload-area"], [class*="upload-buttons"]');
-        if (!dropZone) return false;
+        this.logger.info('🎯 Executing Drag and Drop Strategy...');
+        
+        // Try multiple drop zone selectors
+        const dropZoneSelectors = [
+            '[class*="dropzone"]',
+            '[class*="upload-area"]',
+            '[class*="upload-zone"]',
+            '[class*="photo-upload"]',
+            '[class*="image-upload"]',
+            '[data-testid*="upload"]',
+            '[data-testid*="photo"]',
+            '[data-testid*="image"]',
+            '.photo-upload-area',
+            '.image-upload-area',
+            '.upload-dropzone',
+            'div[role="button"]',
+            'button[class*="upload"]'
+        ];
+        
+        let dropZone = null;
+        for (const selector of dropZoneSelectors) {
+            dropZone = document.querySelector(selector);
+            if (dropZone) {
+                this.logger.info(`✅ Found drop zone: ${selector}`);
+                break;
+            }
+        }
+        
+        if (!dropZone) {
+            this.logger.warn('⚠️ No drop zone found for drag and drop strategy');
+            return false;
+        }
 
-        const dataTransfer = new DataTransfer();
-        files.forEach(file => dataTransfer.items.add(file));
+        try {
+            const dataTransfer = new DataTransfer();
+            files.forEach(file => dataTransfer.items.add(file));
 
-        // Dispatch a sequence of events to simulate a real drag-and-drop
-        dropZone.dispatchEvent(new DragEvent('dragenter', { bubbles: true, dataTransfer }));
-        await sleep(100);
-        dropZone.dispatchEvent(new DragEvent('dragover', { bubbles: true, dataTransfer }));
-        await sleep(100);
-        dropZone.dispatchEvent(new DragEvent('drop', { bubbles: true, dataTransfer }));
+            // Dispatch a sequence of events to simulate a real drag-and-drop
+            this.logger.info('🖱️ Simulating drag and drop sequence...');
+            
+            dropZone.dispatchEvent(new DragEvent('dragenter', { bubbles: true, dataTransfer }));
+            await sleep(100);
+            dropZone.dispatchEvent(new DragEvent('dragover', { bubbles: true, dataTransfer }));
+            await sleep(100);
+            dropZone.dispatchEvent(new DragEvent('drop', { bubbles: true, dataTransfer }));
 
-        this.logger.info('Dispatched drag-and-drop events to drop zone.');
-        await sleep(2000); // Give the page time to react
-        return (await this.checkUploadProgress(files.length)) > 0;
+            this.logger.info('📡 Dispatched drag-and-drop events to drop zone');
+            await sleep(3000); // Give the page time to react
+            
+            const progress = await this.checkUploadProgress(files.length);
+            this.logger.info(`📊 Upload progress check: ${progress} images detected`);
+            return progress > 0;
+        } catch (error) {
+            this.logger.error('❌ Error in drag and drop strategy:', error);
+            return false;
+        }
     }
 
     async checkUploadProgress(expectedCount) {
-        // A simple progress check: count the visible thumbnails
-        const thumbnails = document.querySelectorAll('img[class*="thumbnail"], img[class*="image-preview"]');
-        const validThumbnails = Array.from(thumbnails).filter(img => img.src.startsWith('blob:') || img.src.startsWith('data:'));
+        this.logger.info(`🔍 Checking upload progress. Expecting ${expectedCount} images...`);
         
-        if (validThumbnails.length > 0) {
-            this.logger.info(`🔍 Found ${validThumbnails.length} potential new thumbnails.`);
+        // Multiple strategies to detect uploaded images
+        const thumbnailSelectors = [
+            'img[class*="thumbnail"]',
+            'img[class*="image-preview"]',
+            'img[class*="photo-preview"]',
+            'img[class*="upload-preview"]',
+            'img[src*="blob:"]',
+            'img[src*="data:"]',
+            '[class*="photo-item"] img',
+            '[class*="image-item"] img',
+            '[class*="upload-item"] img'
+        ];
+        
+        let totalThumbnails = 0;
+        for (const selector of thumbnailSelectors) {
+            const thumbnails = document.querySelectorAll(selector);
+            const validThumbnails = Array.from(thumbnails).filter(img => {
+                const src = img.src || '';
+                return src.startsWith('blob:') || src.startsWith('data:') || src.includes('upload');
+            });
+            totalThumbnails = Math.max(totalThumbnails, validThumbnails.length);
         }
-        return validThumbnails.length;
+        
+        // Also check for photo counters
+        const counterSelectors = [
+            '[class*="photo-count"]',
+            '[class*="image-count"]',
+            '[class*="upload-count"]',
+            '[data-testid*="count"]',
+            '.photo-counter',
+            '.image-counter'
+        ];
+        
+        for (const selector of counterSelectors) {
+            const counter = document.querySelector(selector);
+            if (counter) {
+                const text = counter.textContent || counter.innerText || '';
+                const match = text.match(/(\d+)/);
+                if (match) {
+                    const count = parseInt(match[1], 10);
+                    totalThumbnails = Math.max(totalThumbnails, count);
+                }
+            }
+        }
+        
+        this.logger.info(`📊 Found ${totalThumbnails} uploaded images`);
+        return totalThumbnails;
     }
 
     async verifyUploadSuccess(expectedCount) {
-        this.logger.info(`🔍 Verifying upload success. Expecting ${expectedCount} images.`);
+        this.logger.info(`🔍 Verifying upload success. Expecting ${expectedCount} images...`);
         const maxWaitTime = 30000; // 30 seconds for verification
         const startTime = Date.now();
         
         while (Date.now() - startTime < maxWaitTime) {
-            const counterText = document.querySelector('[class*="photo-count"], [class*="image-count"]')?.textContent || "0/24";
-            const match = counterText.match(/(\d+)/);
-            const currentCount = match ? parseInt(match[1], 10) : 0;
+            const currentCount = await this.checkUploadProgress(expectedCount);
             
             if (currentCount >= expectedCount) {
-                this.logger.info(`✅ Verification successful! Photo counter shows ${currentCount} images.`);
+                this.logger.info(`✅ Verification successful! Found ${currentCount} images (expected ${expectedCount})`);
                 return true;
             }
             
-            await sleep(1000); // Check every second
+            this.logger.info(`⏳ Verification in progress: ${currentCount}/${expectedCount} images found`);
+            await sleep(2000); // Check every 2 seconds
         }
         
-        this.logger.error(`❌ Verification failed. Timed out waiting for photo counter to reach ${expectedCount}.`);
+        const finalCount = await this.checkUploadProgress(expectedCount);
+        this.logger.error(`❌ Verification failed. Final count: ${finalCount}/${expectedCount} images`);
         return false;
     }
 
@@ -246,14 +491,65 @@ class ImageUploadSystem {
 (async function() {
     // Check if the system has already been initialized
     if (window.imageUploadSystemInitialized) {
+        console.log('⚠️ Image uploader already initialized, skipping...');
         return;
     }
     window.imageUploadSystemInitialized = true;
 
     // Use a shared global logger if it exists from `automation-clean.js`
-    const logger = window.logger || new Logger();
+    const logger = window.logger || new SimpleLogger();
     
     logger.info('🚀 Standalone Image Uploader script loaded.');
+    logger.info('🔗 Current URL:', window.location.href);
+    logger.info('📄 Page title:', document.title);
+
+    // Add manual testing functions to window
+    window.testImageUpload = async function() {
+        logger.info('🧪 Manual image upload test triggered');
+        const uploadSystem = new ImageUploadSystem();
+        return await uploadSystem.uploadImages();
+    };
+    
+    window.debugImageStorage = function() {
+        chrome.storage.local.get(null, (allData) => {
+            logger.info('🔍 All Chrome storage data:', allData);
+            logger.info('📸 Watermarked images:', allData.watermarkedImages?.length || 0);
+            logger.info('🌐 Image URLs:', allData.imageUrls?.length || 0);
+        });
+    };
+    
+    window.debugUploadElements = function() {
+        logger.info('🔍 Debugging upload elements on page...');
+        
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        logger.info(`📁 Found ${fileInputs.length} file inputs:`, Array.from(fileInputs).map(input => ({
+            id: input.id,
+            name: input.name,
+            accept: input.accept,
+            multiple: input.multiple,
+            className: input.className
+        })));
+        
+        const uploadAreas = document.querySelectorAll('[class*="upload"], [class*="dropzone"], [class*="photo"]');
+        logger.info(`📤 Found ${uploadAreas.length} upload areas:`, Array.from(uploadAreas).map(area => ({
+            tagName: area.tagName,
+            className: area.className,
+            id: area.id,
+            textContent: area.textContent?.substring(0, 50)
+        })));
+        
+        const thumbnails = document.querySelectorAll('img[class*="thumbnail"], img[class*="preview"]');
+        logger.info(`🖼️ Found ${thumbnails.length} thumbnails:`, Array.from(thumbnails).map(img => ({
+            src: img.src?.substring(0, 50),
+            className: img.className
+        })));
+    };
+
+    // Check if we're on an eBay listing page
+    if (!window.location.href.includes('ebay.com')) {
+        logger.warn('⚠️ Not on eBay page, skipping image upload');
+        return;
+    }
 
     try {
         const uploadSystem = new ImageUploadSystem();

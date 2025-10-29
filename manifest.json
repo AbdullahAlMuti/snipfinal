@@ -33,7 +33,7 @@
     },
     {
       "matches": ["*://www.ebay.com/*/sell*", "*://www.ebay.com/sl/*", "*://www.ebay.com/lstng*"],
-      "js": ["src/automation-clean.js", "src/item-filler.js", "content_scripts/ebay_lister.js"],
+      "js": ["src/automation-clean.js", "src/image-uploader.js", "src/item-filler.js", "content_scripts/ebay_lister.js"],
       "run_at": "document_idle"
     }
   ],
