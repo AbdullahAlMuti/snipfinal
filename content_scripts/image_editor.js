@@ -75,7 +75,9 @@
       }
       
       ctx = canvas.getContext('2d');
+      console.log('🖼️ Loading image from:', src);
       baseImg = await loadImage(src);
+      console.log('✅ Image loaded successfully:', baseImg);
       
       // Set canvas size based on image
       const maxSize = 800;
@@ -134,7 +136,16 @@
   // 🎨 Draw everything
   // ─────────────────────────────────────────────
   function drawCanvas() {
-    if (!canvas || !ctx || !baseImg) return;
+    if (!canvas || !ctx || !baseImg) {
+      console.error('❌ Canvas drawing failed:', { canvas: !!canvas, ctx: !!ctx, baseImg: !!baseImg });
+      return;
+    }
+    
+    console.log('🎨 Drawing canvas:', { 
+      canvasSize: `${canvas.width}x${canvas.height}`, 
+      imageSize: `${baseImg.width}x${baseImg.height}`,
+      stickers: stickers.length 
+    });
     
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -144,7 +155,12 @@
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // Draw base image
-    ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
+    try {
+      ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
+      console.log('✅ Base image drawn successfully');
+    } catch (error) {
+      console.error('❌ Failed to draw base image:', error);
+    }
     
     // Draw stickers
     stickers.forEach((sticker, index) => {
