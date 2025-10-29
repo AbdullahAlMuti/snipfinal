@@ -27,7 +27,7 @@
   "content_scripts": [
     {
       "matches": ["*://www.amazon.com/*", "*://www.amazon.co.uk/*", "*://www.amazon.de/*", "*://www.amazon.ca/*", "*://www.amazon.com.au/*"],
-      "js": ["content_scripts/amazon_injector.js"],
+      "js": ["content_scripts/amazon_injector.js", "content_scripts/image_editor.js"],
       "css": ["ui/panel.css"]
     },
     {
@@ -39,7 +39,10 @@
     {
       "resources": [
         "ui/panel.html",
+        "ui/editor-popup.html",
+        "ui/editor-popup.css",
         "assets/watermark.png",
+        "assets/stickers/*",
         "src/image-uploader.js",
         "src/item-filler.js",
         "content_scripts/description_paster.js"

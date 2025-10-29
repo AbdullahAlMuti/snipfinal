@@ -939,8 +939,71 @@ const scrapeAndDisplayImages = async () => {
             metadataOverlay.style.textAlign = 'center';
                 metadataOverlay.textContent = `Image ${i + 1} | 1600x1600 | ${imageInfo.size ? Math.round(parseInt(imageInfo.size) / 1024) + 'KB' : 'Unknown size'}`;
             
+            // Add click handler for image editor
+            img.addEventListener('click', () => {
+                console.log(`🎨 Opening image editor for image ${i + 1}`);
+                window.currentEditorOptions = {
+                    src: processedImageUrl,
+                    index: i,
+                    onSave: (newUrl) => {
+                        img.src = newUrl;
+                        console.log(`✅ Image ${i + 1} updated with edited version`);
+                    }
+                };
+                window.openImageEditor(window.currentEditorOptions);
+            });
+            
+            // Add edit button overlay
+            const editButton = document.createElement('button');
+            editButton.innerHTML = '✏️';
+            editButton.className = 'image-edit-btn';
+            editButton.style.cssText = `
+                position: absolute;
+                top: 5px;
+                left: 5px;
+                width: 24px;
+                height: 24px;
+                background: rgba(11, 92, 171, 0.8);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                cursor: pointer;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10;
+                transition: all 0.3s ease;
+                opacity: 0;
+            `;
+            
+            // Show edit button on hover
+            imgContainer.addEventListener('mouseenter', () => {
+                editButton.style.opacity = '1';
+            });
+            
+            imgContainer.addEventListener('mouseleave', () => {
+                editButton.style.opacity = '0';
+            });
+            
+            // Edit button click handler
+            editButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                console.log(`🎨 Opening image editor for image ${i + 1}`);
+                window.currentEditorOptions = {
+                    src: processedImageUrl,
+                    index: i,
+                    onSave: (newUrl) => {
+                        img.src = newUrl;
+                        console.log(`✅ Image ${i + 1} updated with edited version`);
+                    }
+                };
+                window.openImageEditor(window.currentEditorOptions);
+            });
+
             imgContainer.appendChild(img);
                 imgContainer.appendChild(deleteButton);
+            imgContainer.appendChild(editButton);
             imgContainer.appendChild(metadataOverlay);
             galleryContainer.appendChild(imgContainer);
             
