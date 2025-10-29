@@ -941,16 +941,21 @@ const scrapeAndDisplayImages = async () => {
             
             // Add click handler for image editor
             img.addEventListener('click', () => {
-                console.log(`🎨 Opening image editor for image ${i + 1}`);
-                window.currentEditorOptions = {
-                    src: processedImageUrl,
-                    index: i,
-                    onSave: (newUrl) => {
-                        img.src = newUrl;
-                        console.log(`✅ Image ${i + 1} updated with edited version`);
-                    }
-                };
-                window.openImageEditor(window.currentEditorOptions);
+                console.log('🖼️ Image clicked:', img.src);
+                if (typeof window.openImageEditor === 'function') {
+                    console.log('🎨 Opening image editor for image', i + 1);
+                    window.currentEditorOptions = {
+                        src: processedImageUrl,
+                        index: i,
+                        onSave: (newUrl) => {
+                            img.src = newUrl;
+                            console.log(`✅ Image ${i + 1} updated with edited version`);
+                        }
+                    };
+                    window.openImageEditor(window.currentEditorOptions);
+                } else {
+                    console.error('❌ openImageEditor not defined');
+                }
             });
             
             // Add edit button overlay
@@ -989,18 +994,23 @@ const scrapeAndDisplayImages = async () => {
             // Edit button click handler
             editButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                console.log(`🎨 Opening image editor for image ${i + 1}`);
-                window.currentEditorOptions = {
-                    src: processedImageUrl,
-                    index: i,
-                    onSave: (newUrl) => {
-                        img.src = newUrl;
-                        console.log(`✅ Image ${i + 1} updated with edited version`);
-                    }
-                };
-                window.openImageEditor(window.currentEditorOptions);
+                console.log('🖼️ Edit button clicked:', img.src);
+                if (typeof window.openImageEditor === 'function') {
+                    console.log('🎨 Opening image editor for image', i + 1);
+                    window.currentEditorOptions = {
+                        src: processedImageUrl,
+                        index: i,
+                        onSave: (newUrl) => {
+                            img.src = newUrl;
+                            console.log(`✅ Image ${i + 1} updated with edited version`);
+                        }
+                    };
+                    window.openImageEditor(window.currentEditorOptions);
+                } else {
+                    console.error('❌ openImageEditor not defined');
+                }
             });
-
+            
             imgContainer.appendChild(img);
                 imgContainer.appendChild(deleteButton);
             imgContainer.appendChild(editButton);

@@ -1,4 +1,9 @@
 /* Image Editor Popup Styles */
+#snipe-editor-overlay { 
+    display: flex !important; 
+    opacity: 1 !important; 
+}
+
 .snipe-editor-overlay {
     position: fixed;
     top: 0;
@@ -6,7 +11,7 @@
     width: 100vw;
     height: 100vh;
     background: rgba(0, 0, 0, 0.55);
-    z-index: 10000;
+    z-index: 999999;
     display: flex;
     align-items: center;
     justify-content: center;
