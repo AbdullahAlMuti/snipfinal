@@ -385,16 +385,10 @@ class AmazonImageExtractor {
         }
         
         // Transform to high resolution
-        console.log('🔄 Transforming to high resolution...');
         this.transformToHighRes();
-        console.log(`📊 After high-res transformation: ${this.images.size} total images found`);
         
         // Validate and filter
-        console.log('✅ Validating image quality...');
         await this.validateImageQuality();
-        
-        console.log(`🎉 Extraction complete! Found ${this.highQualityImages.length} high-quality images`);
-        console.log('📋 High-quality images:', this.highQualityImages.map(img => img.url));
         
         return this.highQualityImages;
     }
