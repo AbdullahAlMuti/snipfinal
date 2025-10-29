@@ -1,20 +1,102 @@
 <div id="snipe-editor-overlay" class="snipe-editor-overlay" style="display:none">
   <div class="editor-shell">
-    <div class="editor-main">
-      <canvas id="editor-canvas" width="1600" height="1600"></canvas>
-    </div>
-    <div class="editor-side">
-      <div class="side-head">
-        <strong>Stickers</strong>
-        <label class="upload-btn">
-          Upload
-          <input id="sticker-upload" type="file" accept="image/png,image/jpeg,image/webp" hidden>
-        </label>
+    <!-- Header -->
+    <div class="editor-header">
+      <h3>🖼️ Image Editor</h3>
+      <div class="header-actions">
+        <button id="btn-undo" class="btn-icon" title="Undo (Ctrl+Z)">↶</button>
+        <button id="btn-redo" class="btn-icon" title="Redo (Ctrl+Y)">↷</button>
+        <button id="btn-zoom-in" class="btn-icon" title="Zoom In">+</button>
+        <button id="btn-zoom-out" class="btn-icon" title="Zoom Out">-</button>
+        <button id="btn-reset" class="btn-icon" title="Reset View">⌂</button>
       </div>
-      <div id="sticker-gallery" class="sticker-grid"></div>
+    </div>
+    
+    <!-- Main Editor Area -->
+    <div class="editor-main">
+      <div class="canvas-container">
+        <canvas id="editor-canvas"></canvas>
+        <div class="canvas-overlay">
+          <div class="zoom-controls">
+            <span id="zoom-level">100%</span>
+          </div>
+          <div class="instructions">
+            <p>💡 <strong>Tips:</strong></p>
+            <ul>
+              <li>Click stickers to add them</li>
+              <li>Drag to move, resize from corner</li>
+              <li>Click × to delete selected sticker</li>
+              <li>Press <kbd>Delete</kbd> to remove selected</li>
+              <li>Press <kbd>Esc</kbd> to close</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="editor-side">
+      <!-- Stickers Section -->
+      <div class="side-section">
+        <div class="side-head">
+          <h4>🎨 Stickers</h4>
+          <label class="upload-btn" title="Upload your own sticker">
+            📁 Upload
+            <input id="sticker-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+          </label>
+        </div>
+        <div id="sticker-gallery" class="sticker-grid">
+          <div class="loading">Loading stickers...</div>
+        </div>
+      </div>
+      
+      <!-- Tools Section -->
+      <div class="side-section">
+        <h4>🛠️ Tools</h4>
+        <div class="tool-buttons">
+          <button id="btn-clear-all" class="btn-tool" title="Clear all stickers">
+            🗑️ Clear All
+          </button>
+          <button id="btn-duplicate" class="btn-tool" title="Duplicate selected sticker">
+            📋 Duplicate
+          </button>
+        </div>
+      </div>
+      
+      <!-- Sticker Properties -->
+      <div class="side-section" id="sticker-properties" style="display: none;">
+        <h4>⚙️ Properties</h4>
+        <div class="property-group">
+          <label>Size:</label>
+          <input type="range" id="size-slider" min="10" max="200" value="100">
+          <span id="size-value">100%</span>
+        </div>
+        <div class="property-group">
+          <label>Opacity:</label>
+          <input type="range" id="opacity-slider" min="10" max="100" value="100">
+          <span id="opacity-value">100%</span>
+        </div>
+        <div class="property-group">
+          <label>Rotation:</label>
+          <input type="range" id="rotation-slider" min="0" max="360" value="0">
+          <span id="rotation-value">0°</span>
+        </div>
+      </div>
+      
+      <!-- Actions -->
       <div class="side-actions">
-        <button id="btn-save-edit" class="btn primary">Save</button>
-        <button id="btn-cancel-edit" class="btn">Cancel</button>
+        <button id="btn-save-edit" class="btn primary">
+          💾 Save Image
+        </button>
+        <button id="btn-cancel-edit" class="btn secondary">
+          ❌ Cancel
+        </button>
+      </div>
+      
+      <!-- Status -->
+      <div class="status-bar">
+        <span id="sticker-count">0 stickers</span>
+        <span id="canvas-size">800x600</span>
       </div>
     </div>
   </div>
