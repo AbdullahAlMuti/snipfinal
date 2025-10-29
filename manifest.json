@@ -49,17 +49,7 @@
         "src/item-filler.js",
         "content_scripts/description_paster.js"
       ],
-      "matches": [
-        "*://*.amazon.com/*",
-        "*://*.amazon.ca/*",
-        "*://*.amazon.co.uk/*",
-        "*://*.amazon.de/*",
-        "*://*.amazon.fr/*",
-        "*://*.amazon.it/*",
-        "*://*.amazon.es/*",
-        "*://*.amazon.com.au/*",
-        "*://*.amazon.in/*"
-      ]
+      "matches": ["*://*.amazon.com/*"]
     }
   ],
   "icons": {

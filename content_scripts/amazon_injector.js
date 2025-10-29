@@ -939,81 +939,25 @@ const scrapeAndDisplayImages = async () => {
             metadataOverlay.style.textAlign = 'center';
                 metadataOverlay.textContent = `Image ${i + 1} | 1600x1600 | ${imageInfo.size ? Math.round(parseInt(imageInfo.size) / 1024) + 'KB' : 'Unknown size'}`;
             
-            // Add click handler for image editor
-            img.addEventListener('click', () => {
-                console.log('🖼️ Image clicked:', img.src);
-                if (typeof window.openImageEditor === 'function') {
-                    console.log('🎨 Opening image editor for image', i + 1);
-                    window.currentEditorOptions = {
-                        src: processedImageUrl,
-                        index: i,
-                        onSave: (newUrl) => {
-                            img.src = newUrl;
-                            console.log(`✅ Image ${i + 1} updated with edited version`);
-                        }
-                    };
-                    window.openImageEditor(window.currentEditorOptions);
-                } else {
-                    console.error('❌ openImageEditor not defined');
-                }
-            });
-            
             // Add edit button overlay
-            const editButton = document.createElement('button');
-            editButton.innerHTML = '✏️';
-            editButton.className = 'image-edit-btn';
-            editButton.style.cssText = `
-                position: absolute;
-                top: 5px;
-                left: 5px;
-                width: 24px;
-                height: 24px;
-                background: rgba(11, 92, 171, 0.8);
-                color: white;
-                border: none;
-                border-radius: 50%;
-                cursor: pointer;
-                font-size: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10;
-                transition: all 0.3s ease;
-                opacity: 0;
-            `;
-            
-            // Show edit button on hover
-            imgContainer.addEventListener('mouseenter', () => {
-                editButton.style.opacity = '1';
-            });
-            
-            imgContainer.addEventListener('mouseleave', () => {
-                editButton.style.opacity = '0';
-            });
-            
-            // Edit button click handler
-            editButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                console.log('🖼️ Edit button clicked:', img.src);
-                if (typeof window.openImageEditor === 'function') {
-                    console.log('🎨 Opening image editor for image', i + 1);
-                    window.currentEditorOptions = {
-                        src: processedImageUrl,
-                        index: i,
-                        onSave: (newUrl) => {
-                            img.src = newUrl;
-                            console.log(`✅ Image ${i + 1} updated with edited version`);
-                        }
-                    };
-                    window.openImageEditor(window.currentEditorOptions);
-                } else {
-                    console.error('❌ openImageEditor not defined');
-                }
+            const editBtn = document.createElement('button');
+            editBtn.textContent = '✎';
+            editBtn.className = 'image-edit-btn';
+            editBtn.style.cssText = `
+              position:absolute;top:5px;left:5px;width:24px;height:24px;
+              background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:4px;
+              cursor:pointer;opacity:0;transition:opacity .2s;z-index:10;`;
+            imgContainer.appendChild(editBtn);
+            imgContainer.addEventListener('mouseenter',()=>editBtn.style.opacity='1');
+            imgContainer.addEventListener('mouseleave',()=>editBtn.style.opacity='0');
+            editBtn.addEventListener('click',e=>{
+              e.stopPropagation();
+              const index = parseInt(imgContainer.dataset.imageIndex);
+              window.__SNIPE_OPEN_IMAGE_EDITOR__?.(img.src, index);
             });
             
             imgContainer.appendChild(img);
                 imgContainer.appendChild(deleteButton);
-            imgContainer.appendChild(editButton);
             imgContainer.appendChild(metadataOverlay);
             galleryContainer.appendChild(imgContainer);
             
