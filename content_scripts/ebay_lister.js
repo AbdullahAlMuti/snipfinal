@@ -1,13 +1,44 @@
 console.log("eBay Lister script loaded: Awaiting data...");
 
+// Manual trigger function for testing (can be called from console)
+window.testEbayFilling = async function() {
+  console.log("🧪 Manual test triggered");
+  
+  const data = await chrome.storage.local.get([
+    "productTitle",
+    "ebayPrice", 
+    "imageUrls",
+    "pricingConfig",
+    "amazonPrice",
+    "ebayTitle",
+    "watermarkedImages"
+  ]);
+  
+  console.log("📦 Test data:", data);
+  
+  const images = data.watermarkedImages && data.watermarkedImages.length > 0 
+    ? data.watermarkedImages 
+    : data.imageUrls;
+    
+  const title = data.ebayTitle || data.productTitle;
+  const finalPrice = data.ebayPrice;
+  
+  if (title && images && images.length > 0) {
+    await fillFormFields(title, finalPrice, images[0]);
+  } else {
+    console.error("❌ Missing data for test");
+  }
+};
+
 // Message listener for RUN_EBAY_LISTER
 chrome.runtime.onMessage.addListener(async (request) => {
   if (request.action === "RUN_EBAY_LISTER") {
     console.log("🎯 RUN_EBAY_LISTER received, starting automation...");
     console.log("🔗 Current URL:", window.location.href);
+    console.log("📄 Page title:", document.title);
     
     // Wait a bit for page to fully load
-    await wait(2000);
+    await wait(3000);
     
     const data = await chrome.storage.local.get([
       "productTitle",
@@ -47,6 +78,27 @@ chrome.runtime.onMessage.addListener(async (request) => {
 
     const title = data.ebayTitle || data.productTitle;
     
+    // Debug: Log all available form elements
+    console.log("🔍 All form elements on page:");
+    console.log("Inputs:", Array.from(document.querySelectorAll('input')).map(i => ({
+      type: i.type,
+      id: i.id,
+      name: i.name,
+      placeholder: i.placeholder,
+      'aria-label': i.getAttribute('aria-label'),
+      'data-testid': i.getAttribute('data-testid'),
+      className: i.className
+    })));
+    
+    console.log("File inputs:", Array.from(document.querySelectorAll('input[type="file"]')).map(i => ({
+      id: i.id,
+      name: i.name,
+      accept: i.accept,
+      multiple: i.multiple,
+      'aria-label': i.getAttribute('aria-label'),
+      'data-testid': i.getAttribute('data-testid')
+    })));
+    
     // Try to fill form fields with retry logic
     await fillFormFields(title, finalPrice, images[0]);
 
@@ -59,8 +111,11 @@ async function fillFormFields(title, finalPrice, firstImage) {
   console.log("🔧 Starting form filling process...");
   
   // Try multiple times with different strategies
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    console.log(`🔄 Attempt ${attempt}/3`);
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    console.log(`🔄 Attempt ${attempt}/5`);
+    
+    // Wait for elements to load
+    await wait(1000);
     
     // Fill Title - try multiple selectors for different eBay page types
     let titleInput = document.querySelector("#editpane_title") || 
@@ -68,27 +123,29 @@ async function fillFormFields(title, finalPrice, firstImage) {
                     document.querySelector('input[placeholder*="title" i]') ||
                     document.querySelector('input[data-testid*="title" i]') ||
                     document.querySelector('input[aria-label*="title" i]') ||
-                    document.querySelector('input[type="text"]:not([readonly])');
+                    document.querySelector('input[type="text"]:not([readonly])') ||
+                    document.querySelector('textarea[placeholder*="title" i]') ||
+                    document.querySelector('textarea[name*="title" i]');
     
     if (titleInput) {
+      console.log("📝 Found title input:", titleInput);
       titleInput.focus();
+      await wait(200);
       titleInput.value = '';
-      await wait(100);
+      await wait(200);
       titleInput.value = title;
-      titleInput.dispatchEvent(new Event('input', { bubbles: true }));
-      titleInput.dispatchEvent(new Event('change', { bubbles: true }));
-      titleInput.dispatchEvent(new Event('blur', { bubbles: true }));
+      
+      // Try multiple event types
+      ['input', 'change', 'blur', 'keyup'].forEach(eventType => {
+        titleInput.dispatchEvent(new Event(eventType, { bubbles: true }));
+      });
+      
+      // Also try setting value directly
+      titleInput.setAttribute('value', title);
+      
       console.log("✅ Title filled:", title);
     } else {
-      console.warn("⚠️ Title input not found. Available inputs:", 
-        Array.from(document.querySelectorAll('input[type="text"]')).map(i => ({
-          id: i.id, 
-          name: i.name, 
-          placeholder: i.placeholder,
-          'aria-label': i.getAttribute('aria-label'),
-          value: i.value
-        }))
-      );
+      console.warn("⚠️ Title input not found on attempt", attempt);
     }
 
     // Fill Price - try multiple selectors
@@ -97,70 +154,107 @@ async function fillFormFields(title, finalPrice, firstImage) {
                     document.querySelector('input[placeholder*="price" i]') ||
                     document.querySelector('input[data-testid*="price" i]') ||
                     document.querySelector('input[aria-label*="price" i]') ||
-                    document.querySelector('input[type="number"]');
+                    document.querySelector('input[type="number"]') ||
+                    document.querySelector('input[type="text"][name*="price" i]');
     
     if (priceInput && finalPrice) {
+      console.log("💰 Found price input:", priceInput);
       priceInput.focus();
+      await wait(200);
       priceInput.value = '';
-      await wait(100);
+      await wait(200);
       priceInput.value = finalPrice;
-      priceInput.dispatchEvent(new Event('input', { bubbles: true }));
-      priceInput.dispatchEvent(new Event('change', { bubbles: true }));
-      priceInput.dispatchEvent(new Event('blur', { bubbles: true }));
+      
+      // Try multiple event types
+      ['input', 'change', 'blur', 'keyup'].forEach(eventType => {
+        priceInput.dispatchEvent(new Event(eventType, { bubbles: true }));
+      });
+      
+      // Also try setting value directly
+      priceInput.setAttribute('value', finalPrice);
+      
       console.log("✅ Price filled:", finalPrice);
     } else {
-      console.warn("⚠️ Price input not found or no price data. Available inputs:", 
-        Array.from(document.querySelectorAll('input[type="text"], input[type="number"]')).map(i => ({
-          id: i.id, 
-          name: i.name, 
-          placeholder: i.placeholder,
-          'aria-label': i.getAttribute('aria-label'),
-          value: i.value
-        }))
-      );
+      console.warn("⚠️ Price input not found on attempt", attempt);
     }
 
-    // Upload first image - try multiple selectors
+    // Upload first image - try multiple selectors and methods
     let uploader = document.querySelector('input[type="file"][multiple]') ||
                   document.querySelector('input[type="file"]') ||
                   document.querySelector('input[accept*="image"]') ||
                   document.querySelector('input[data-testid*="upload" i]') ||
-                  document.querySelector('input[aria-label*="upload" i]');
+                  document.querySelector('input[aria-label*="upload" i]') ||
+                  document.querySelector('input[accept*="*"]');
     
     if (uploader && firstImage) {
       try {
+        console.log("🖼️ Found uploader:", uploader);
         console.log("🖼️ Attempting to upload image:", firstImage);
         
+        // Method 1: DataTransfer
         const blob = await fetch(firstImage).then(r => r.blob());
         const file = new File([blob], "main.jpg", { type: blob.type });
         const dt = new DataTransfer();
         dt.items.add(file);
         uploader.files = dt.files;
-        uploader.dispatchEvent(new Event('change', { bubbles: true }));
-        uploader.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        // Method 2: Direct file assignment (if supported)
+        try {
+          uploader.files = [file];
+        } catch (e) {
+          console.log("Direct file assignment not supported, using DataTransfer");
+        }
+        
+        // Dispatch events
+        ['change', 'input', 'drop'].forEach(eventType => {
+          uploader.dispatchEvent(new Event(eventType, { bubbles: true }));
+        });
+        
         console.log("✅ First image uploaded:", firstImage);
       } catch (error) {
         console.error("❌ Failed to upload image:", error);
+        
+        // Try alternative upload method
+        try {
+          console.log("🔄 Trying alternative upload method...");
+          const response = await fetch(firstImage);
+          const blob = await response.blob();
+          const file = new File([blob], "image.jpg", { type: "image/jpeg" });
+          
+          // Create a new file input and trigger it
+          const newUploader = document.createElement('input');
+          newUploader.type = 'file';
+          newUploader.multiple = true;
+          newUploader.style.display = 'none';
+          document.body.appendChild(newUploader);
+          
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          newUploader.files = dt.files;
+          newUploader.dispatchEvent(new Event('change', { bubbles: true }));
+          
+          // Copy the files to the original uploader
+          uploader.files = newUploader.files;
+          uploader.dispatchEvent(new Event('change', { bubbles: true }));
+          
+          document.body.removeChild(newUploader);
+          console.log("✅ Alternative upload method succeeded");
+        } catch (altError) {
+          console.error("❌ Alternative upload method also failed:", altError);
+        }
       }
     } else {
-      console.warn("⚠️ Image uploader not found or no images available. Available file inputs:", 
-        Array.from(document.querySelectorAll('input[type="file"]')).map(i => ({
-          id: i.id, 
-          name: i.name, 
-          accept: i.accept,
-          multiple: i.multiple,
-          'aria-label': i.getAttribute('aria-label')
-        }))
-      );
+      console.warn("⚠️ Image uploader not found on attempt", attempt);
     }
     
     // If we found and filled at least the title, break
     if (titleInput) {
+      console.log("✅ Found title input, breaking retry loop");
       break;
     }
     
     // Wait before next attempt
-    if (attempt < 3) {
+    if (attempt < 5) {
       console.log("⏳ Waiting before retry...");
       await wait(2000);
     }
