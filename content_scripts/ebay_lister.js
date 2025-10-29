@@ -233,6 +233,46 @@ async function runEbayAutomation(data) {
         }
     }
     
+    // Upload Images
+    if (data.watermarkedImages && data.watermarkedImages.length > 0) {
+        try {
+            console.log("🖼️ Starting image upload process...");
+            console.log("📸 Number of images to upload:", data.watermarkedImages.length);
+            
+            await uploadImages(data.watermarkedImages);
+            console.log("✅ Image upload process completed");
+        } catch (error) {
+            console.error("❌ Could not upload images:", error);
+        }
+    } else if (data.imageUrls && data.imageUrls.length > 0) {
+        try {
+            console.log("🖼️ Starting image upload process (using imageUrls)...");
+            console.log("📸 Number of images to upload:", data.imageUrls.length);
+            
+            await uploadImages(data.imageUrls);
+            console.log("✅ Image upload process completed");
+        } catch (error) {
+            console.error("❌ Could not upload images:", error);
+        }
+    } else {
+        console.log("⚠️ No images found in storage to upload");
+    }
+    
+    // Handle Item Specifics
+    if (data.itemSpecifics) {
+        try {
+            console.log("📋 Starting item specifics filling...");
+            console.log("🎯 Item specifics data:", data.itemSpecifics);
+            
+            await fillItemSpecifics(data.itemSpecifics);
+            console.log("✅ Item specifics filling completed");
+        } catch (error) {
+            console.error("❌ Could not fill item specifics:", error);
+        }
+    } else {
+        console.log("⚠️ No item specifics data found in storage");
+    }
+    
     // Paste SKU
     if (data.ebaySku) {
         try {
@@ -444,7 +484,7 @@ async function initializeEbayLister() {
     // Additional wait for dynamic content - eBay pages can be slow
     await wait(3000);
     
-    chrome.storage.local.get(['ebayTitle', 'ebaySku', 'ebayPrice', 'ebayCondition'], async (result) => {
+    chrome.storage.local.get(['ebayTitle', 'ebaySku', 'ebayPrice', 'ebayCondition', 'watermarkedImages', 'imageUrls', 'itemSpecifics'], async (result) => {
         console.log("📦 Retrieved data from storage:", result);
         console.log("🔍 SKU from storage:", result.ebaySku);
         console.log("🔍 Title from storage:", result.ebayTitle);
@@ -881,6 +921,236 @@ function getConditionLabels(conditionValue) {
     
     return conditionMap[conditionValue] || ["new"]; // Default to new if value not found
 }
+
+// Image upload function
+async function uploadImages(imageUrls) {
+    console.log("🖼️ Starting image upload process...");
+    
+    // Find file input for image upload
+    const fileInputSelectors = [
+        'input[type="file"][multiple]',
+        'input[type="file"]',
+        'input[accept*="image"]',
+        'input[data-testid*="upload"]',
+        'input[aria-label*="upload"]',
+        'input[accept*="*"]'
+    ];
+    
+    let fileInput = null;
+    for (const selector of fileInputSelectors) {
+        fileInput = document.querySelector(selector);
+        if (fileInput) {
+            console.log(`✅ Found file input with selector: ${selector}`);
+            break;
+        }
+    }
+    
+    if (!fileInput) {
+        console.error("❌ No file input found for image upload");
+        return;
+    }
+    
+    console.log("📁 File input details:", {
+        id: fileInput.id,
+        name: fileInput.name,
+        accept: fileInput.accept,
+        multiple: fileInput.multiple
+    });
+    
+    try {
+        // Convert image URLs to files
+        const files = [];
+        for (let i = 0; i < Math.min(imageUrls.length, 12); i++) { // eBay limit is usually 12 images
+            const imageUrl = imageUrls[i];
+            console.log(`📸 Processing image ${i + 1}: ${imageUrl}`);
+            
+            try {
+                const response = await fetch(imageUrl);
+                const blob = await response.blob();
+                const file = new File([blob], `image_${i + 1}.jpg`, { type: 'image/jpeg' });
+                files.push(file);
+                console.log(`✅ Image ${i + 1} converted to file`);
+            } catch (error) {
+                console.error(`❌ Failed to convert image ${i + 1}:`, error);
+            }
+        }
+        
+        if (files.length === 0) {
+            console.error("❌ No images could be converted to files");
+            return;
+        }
+        
+        console.log(`📦 Successfully prepared ${files.length} files for upload`);
+        
+        // Create DataTransfer object
+        const dataTransfer = new DataTransfer();
+        files.forEach(file => dataTransfer.items.add(file));
+        
+        // Set files to input
+        fileInput.files = dataTransfer.files;
+        
+        // Dispatch change event
+        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+        fileInput.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        console.log("✅ Files set to input and events dispatched");
+        
+        // Wait for upload to process
+        await wait(3000);
+        
+        // Check if upload was successful
+        const uploadedImages = document.querySelectorAll('.image-uploader__image, .image-item, [class*="image"]');
+        console.log(`🔍 Found ${uploadedImages.length} uploaded images on page`);
+        
+        if (uploadedImages.length > 0) {
+            console.log("✅ Images appear to have been uploaded successfully");
+        } else {
+            console.log("⚠️ No uploaded images detected, but files were set");
+        }
+        
+    } catch (error) {
+        console.error("❌ Error during image upload:", error);
+    }
+}
+
+// Item specifics filling function
+async function fillItemSpecifics(itemSpecifics) {
+    console.log("📋 Starting item specifics filling...");
+    
+    // Wait for item specifics section to load
+    await wait(2000);
+    
+    // Look for item specifics section
+    const itemSpecificsSelectors = [
+        '[data-testid*="item-specifics"]',
+        '.item-specifics',
+        '[class*="item-specifics"]',
+        '[data-testid*="specifics"]',
+        '.specifics',
+        '[class*="specifics"]'
+    ];
+    
+    let itemSpecificsSection = null;
+    for (const selector of itemSpecificsSelectors) {
+        itemSpecificsSection = document.querySelector(selector);
+        if (itemSpecificsSection) {
+            console.log(`✅ Found item specifics section: ${selector}`);
+            break;
+        }
+    }
+    
+    if (!itemSpecificsSection) {
+        console.log("⚠️ Item specifics section not found, trying to find individual fields");
+    }
+    
+    // Fill each item specific
+    for (const [key, value] of Object.entries(itemSpecifics)) {
+        if (!value || value.trim() === '') continue;
+        
+        console.log(`📝 Filling item specific: ${key} = ${value}`);
+        
+        try {
+            // Method 1: Look for input by name attribute
+            let input = document.querySelector(`input[name*="${key}" i], input[name*="${key.toLowerCase()}" i]`);
+            
+            // Method 2: Look for select by name attribute
+            if (!input) {
+                input = document.querySelector(`select[name*="${key}" i], select[name*="${key.toLowerCase()}" i]`);
+            }
+            
+            // Method 3: Look for textarea by name attribute
+            if (!input) {
+                input = document.querySelector(`textarea[name*="${key}" i], textarea[name*="${key.toLowerCase()}" i]`);
+            }
+            
+            // Method 4: Look for input by placeholder or label
+            if (!input) {
+                const labels = document.querySelectorAll('label');
+                for (const label of labels) {
+                    if (label.textContent.toLowerCase().includes(key.toLowerCase())) {
+                        const forAttr = label.getAttribute('for');
+                        if (forAttr) {
+                            input = document.getElementById(forAttr);
+                            if (input) break;
+                        }
+                    }
+                }
+            }
+            
+            if (input) {
+                console.log(`✅ Found input for ${key}:`, {
+                    tagName: input.tagName,
+                    type: input.type,
+                    name: input.name,
+                    id: input.id
+                });
+                
+                if (input.tagName === 'SELECT') {
+                    // Handle select dropdown
+                    const option = input.querySelector(`option[value="${value}"], option:contains("${value}")`);
+                    if (option) {
+                        input.value = option.value;
+                        input.dispatchEvent(new Event('change', { bubbles: true }));
+                        console.log(`✅ Selected option for ${key}: ${value}`);
+                    } else {
+                        console.log(`⚠️ Option not found for ${key}: ${value}`);
+                    }
+                } else {
+                    // Handle input/textarea
+                    input.value = value;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    console.log(`✅ Filled input for ${key}: ${value}`);
+                }
+            } else {
+                console.log(`⚠️ No input found for item specific: ${key}`);
+            }
+            
+        } catch (error) {
+            console.error(`❌ Error filling item specific ${key}:`, error);
+        }
+        
+        // Small delay between fields
+        await wait(500);
+    }
+    
+    console.log("✅ Item specifics filling completed");
+}
+
+// Manual image upload function for testing
+window.manualImageUpload = async (imageUrls) => {
+    if (!imageUrls) {
+        chrome.storage.local.get(['watermarkedImages', 'imageUrls'], (result) => {
+            const images = result.watermarkedImages || result.imageUrls || [];
+            if (images.length > 0) {
+                manualImageUpload(images);
+            } else {
+                alert('No images found in storage');
+            }
+        });
+        return;
+    }
+    
+    console.log("🧪 Manual image upload triggered");
+    await uploadImages(imageUrls);
+};
+
+// Manual item specifics function for testing
+window.manualItemSpecifics = async (itemSpecifics) => {
+    if (!itemSpecifics) {
+        chrome.storage.local.get(['itemSpecifics'], (result) => {
+            if (result.itemSpecifics) {
+                manualItemSpecifics(result.itemSpecifics);
+            } else {
+                alert('No item specifics found in storage');
+            }
+        });
+        return;
+    }
+    
+    console.log("🧪 Manual item specifics triggered");
+    await fillItemSpecifics(itemSpecifics);
+};
 
 // Start the initialization with a small delay to ensure page is ready
 setTimeout(() => {
