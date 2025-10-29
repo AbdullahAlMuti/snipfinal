@@ -49,7 +49,7 @@
         "src/item-filler.js",
         "content_scripts/description_paster.js"
       ],
-      "matches": ["*://*.amazon.com/*"]
+      "matches": ["*://*.amazon.com/*", "*://*.ebay.com/*"]
     }
   ],
   "icons": {

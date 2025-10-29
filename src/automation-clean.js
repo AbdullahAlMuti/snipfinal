@@ -796,20 +796,7 @@ async function initializeAutomation() {
             await window.automationController.execute(title);
 
         } else if (isEbayUploadPage(currentUrl)) {
-            window.logger.info('🔍 Detected eBay upload page. Loading modules...');
-
-            try {
-                const uploaderModuleUrl = chrome.runtime.getURL('src/image-uploader.js');
-                await import(uploaderModuleUrl);
-                window.logger.info('✅ Image uploader module loaded.');
-
-                const fillerModuleUrl = chrome.runtime.getURL('src/item-filler.js');
-                await import(fillerModuleUrl);
-                window.logger.info('✅ Item filler module loaded.');
-
-            } catch (error) {
-                window.logger.error('💥 Failed to import automation modules:', error);
-            }
+            window.logger.info('🔍 Detected eBay upload page. Modules are loaded via manifest.');
         } else {
             window.logger.warn('❌ Unsupported page - not on an eBay prelist or upload page.');
             window.logger.info(`🔗 Current URL: ${currentUrl}`);
