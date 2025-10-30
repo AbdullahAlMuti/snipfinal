@@ -71,34 +71,54 @@ html, body {
 /* ================= Buttons ================= */
 .snipe-btn {
   border: none;
-  border-radius: var(--radius);
-  font-weight: 600;
-  font-size: 13px;
-  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 20px;
   cursor: pointer;
   color: #fff;
-  transition: all 0.25s ease;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
   white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  min-height: 44px;
+}
+
+.snipe-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.snipe-btn:hover::before {
+  left: 100%;
 }
 
 .snipe-btn:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.12);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
 }
 
 .snipe-btn:active {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
 }
 
 .snipe-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 /* Button Variants */
@@ -125,6 +145,28 @@ html, body {
   background: linear-gradient(135deg, var(--accent), #059669); 
 }
 
+/* Refresh button - make it visible */
+#refresh-images-btn {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
+  font-weight: 600;
+}
+
+#refresh-images-btn:hover {
+  background: linear-gradient(135deg, #4f46e5, #3730a3);
+  transform: translateY(-2px) scale(1.03);
+}
+
+/* Default button fallback */
+.snipe-btn:not([class*="snipe-btn-"]) {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white;
+}
+
+.snipe-btn:not([class*="snipe-btn-"]):hover {
+  background: linear-gradient(135deg, #4b5563, #374151);
+}
+
 /* ================= Inputs ================= */
 .compact-input-group {
   display: flex;
@@ -142,18 +184,20 @@ html, body {
 .input-field {
   display: flex;
   align-items: center;
-  gap: 4px;
-  border-radius: 6px;
-  background: #f1f5f9;
-  padding: 4px 8px;
-  height: 32px;
-  border: 1px solid var(--border);
+  gap: 6px;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 8px 12px;
+  height: 40px;
+  border: 2px solid var(--border);
   transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .input-field:focus-within {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  transform: translateY(-1px);
 }
 
 .input-field input,
@@ -161,22 +205,42 @@ html, body {
   border: none;
   background: transparent;
   outline: none;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text);
   flex: 1;
   min-width: 0;
+  font-weight: 500;
 }
 
 .input-field input::placeholder {
   color: var(--muted);
+  font-weight: 400;
+}
+
+.input-field select {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--primary);
 }
 
 .price-field { 
-  background: #dcfce7; 
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border-color: #22c55e;
+}
+
+.price-field:focus-within {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
 }
 
 .sku-field { 
-  background: #e0f2fe; 
+  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  border-color: #0ea5e9;
+}
+
+.sku-field:focus-within {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
 }
 
 /* ================= Image Gallery ================= */
@@ -511,3 +575,155 @@ html, body {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* ========================== */
+/* 🔧 POLISH/PATCH OVERRIDES  */
+/* ========================== */
+
+/* 1) Consistent sizing & typography */
+* { box-sizing: border-box; }
+button, input, select { line-height: 1; font-family: inherit; }
+.snipe-btn { height: 36px; padding: 0 14px; border-radius: 8px; }
+.compact-input-group { gap: 8px; padding: 8px 10px; border-radius: 8px; }
+.input-field { height: 36px; border-radius: 8px; padding: 0 10px; }
+.input-field input, .input-field select { font-size: 13px; }
+.input-field select { min-width: 56px; }
+
+/* 2) Section shells with softer shadows and clean edges */
+.image-controls,
+.snipe-controls,
+.snipe-image-gallery,
+.snipe-title-list {
+  border: 1px solid #e6e9ef;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(20, 30, 55, 0.06);
+}
+
+/* 3) Control bars – spacing and wrap */
+.image-controls, .snipe-controls {
+  gap: 10px;
+  padding: 12px 16px;
+}
+
+/* 4) Buttons palette (same design, nicer tones) */
+.snipe-btn-action { background: linear-gradient(135deg, #2f7bf4, #1c5fe0); }
+.snipe-btn-copy, .snipe-btn-details { background: linear-gradient(135deg, #7c57ee, #5b32d6); }
+.snipe-btn-description { background: linear-gradient(135deg, #ea4b98, #cc2b77); }
+.snipe-btn-download, .snipe-btn-calculator { background: linear-gradient(135deg, #fb8a3c, #f06a12); }
+.snipe-btn-quick-calc, .snipe-btn-generate { background: linear-gradient(135deg, #15b27d, #0b9868); }
+
+.snipe-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(16,24,40,0.12); }
+.snipe-btn:active { transform: translateY(0); box-shadow: 0 3px 8px rgba(16,24,40,0.10); }
+
+/* 5) Price/SKU chips look like pills and line up */
+.price-field { background: #e9f8ef; border-color: #cdeed9; font-weight: 700; }
+.sku-field { background: #e6f4ff; border-color: #cfe7ff; }
+
+/* 6) Image grid – consistent tiles */
+.snipe-image-gallery {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  padding: 14px;
+}
+.product-image-container { border-radius: 10px; }
+.product-image-1600 { height: 170px; border-radius: 10px; }
+.image-delete-btn { width: 26px; height: 26px; line-height: 26px; }
+
+/* 7) Title list – real columns & perfect alignment
+   Make sure your row HTML/JS sets:
+   <div class="title-row">
+     <div class="rank">1</div>
+     <div class="type">Filtered</div>
+     <div class="title-text">...</div>
+     <div class="char-count">177</div>
+     <div class="row-actions"><button>Change</button></div>
+   </div>
+*/
+.snipe-title-list { overflow: hidden; }
+.title-row {
+  display: grid !important;
+  grid-template-columns: 48px 120px 1fr 70px 92px;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #eef1f6;
+  background: #fff;
+}
+.title-row:last-child { border-bottom: none; }
+
+/* selected + hover states (subtle, readable) */
+.title-row:hover { background: #f8fafc; }
+.title-row.selected {
+  background: linear-gradient(0deg, rgba(33,150,243,0.08), rgba(33,150,243,0.08)), #fff;
+  border-left: 3px solid #2f7bf4;
+}
+
+/* text colors */
+.title-row .rank { color: #6b7280; font-weight: 600; }
+.title-row .type { color: #2f7bf4; font-weight: 700; }
+.title-row .title-text { color: #0f172a; font-size: 14px; line-height: 1.35; }
+.title-row .char-count { color: #64748b; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* row action buttons */
+.title-row .row-actions { display: flex; justify-content: flex-end; }
+.title-row .row-actions .action-btn,
+.title-row .row-actions button {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid #d9e0ea;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.title-row .row-actions .action-btn:hover,
+.title-row .row-actions button:hover {
+  background: #f3f6fb;
+  border-color: #cbd5e1;
+}
+
+/* editable title box – clean focus */
+.title-row .title-text[contenteditable="true"] {
+  background: #f8fafc;
+  border: 1.5px solid #cfe1ff;
+  border-radius: 8px;
+  padding: 6px 8px;
+  min-height: 24px;
+}
+.title-row .title-text[contenteditable="true"]:focus {
+  outline: none;
+  background: #eef6ff;
+  border-color: #2f7bf4;
+  box-shadow: 0 0 0 3px rgba(47,123,244,0.12);
+}
+
+/* 8) “Download All Images”/“Refresh” – reduce bulk & align */
+.image-controls .snipe-btn { height: 36px; }
+
+/* 9) Responsive tweaks */
+@media (max-width: 900px) {
+  .title-row { grid-template-columns: 36px 96px 1fr 60px 84px; }
+}
+@media (max-width: 680px) {
+  .title-row {
+    grid-template-columns: 36px 1fr;
+    grid-auto-rows: auto;
+    gap: 6px 10px;
+  }
+  .title-row .type { grid-column: 2 / -1; }
+  .title-row .title-text { grid-column: 1 / -1; }
+  .title-row .char-count { grid-column: 1 / 2; }
+  .title-row .row-actions { grid-column: 2 / -1; justify-content: flex-start; }
+  .snipe-controls .snipe-btn,
+  .image-controls .snipe-btn { width: 100%; }
+  .compact-input-group, .input-field { width: 100%; }
+}
+
+/* 10) Reduce outer glow on sections for a calmer look */
+#snipe-root-wrapper { background: linear-gradient(180deg, #f7f9fc 0%, #f3f6fb 100%); }
