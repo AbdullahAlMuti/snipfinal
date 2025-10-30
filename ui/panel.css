@@ -17,6 +17,9 @@
   --radius: 6px;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: "Inter", "Segoe UI", system-ui, sans-serif;
   }
   
@@ -50,6 +53,8 @@
     flex-direction: column;
   gap: 6px;
     box-sizing: border-box;
+  transition: var(--transition);
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   /* ================= Control Bars ================= */
@@ -66,7 +71,15 @@
   background: var(--surface);
     border: 1px solid var(--border);
   box-shadow: none;
-    box-sizing: border-box;
+  box-sizing: border-box;
+  transition: var(--transition);
+  animation: slideInLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.snipe-controls:hover,
+.image-controls:hover {
+  transform: translateY(-1px);
+    box-shadow: var(--shadow);
   }
   
   /* ================= Buttons ================= */
@@ -78,7 +91,7 @@
   padding: 4px 8px;
     cursor: pointer;
     color: #fff;
-  transition: all 0.15s ease;
+  transition: var(--transition-fast);
   box-shadow: none;
   display: inline-flex;
   align-items: center;
@@ -88,6 +101,8 @@
   position: relative;
   overflow: hidden;
   min-height: 28px;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .snipe-btn::before {
@@ -106,13 +121,15 @@
 }
 
   .snipe-btn:hover {
-  transform: translateY(-1px);
-  opacity: 0.9;
+  transform: translateY(-2px) scale(1.05);
+  opacity: 0.95;
+  box-shadow: var(--shadow);
 }
 
 .snipe-btn:active {
-  transform: translateY(0);
-  opacity: 0.8;
+  transform: translateY(0) scale(0.98);
+  opacity: 0.9;
+  transition: var(--transition-fast);
 }
 
 .snipe-btn:disabled {
@@ -193,25 +210,28 @@
   padding: 2px 4px;
   height: 22px;
   border: 1px solid #d1d5db;
-  transition: border-color 0.15s ease;
+  transition: var(--transition-fast);
   box-shadow: none;
-  min-width: 0;
+  min-width: 20px;
   flex-shrink: 1;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .input-field:focus-within {
   border-color: #3b82f6;
-  box-shadow: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  transform: translateY(-1px) scale(1.02);
 }
 
-.input-field input,
-.input-field select {
-  border: none;
-  background: transparent;
-  outline: none;
+  .input-field input,
+  .input-field select {
+    border: none;
+    background: transparent;
+    outline: none;
   font-size: 11px;
-  color: var(--text);
-  flex: 1;
+    color: var(--text);
+    flex: 1;
   min-width: 0;
   font-weight: 400;
   width: 100%;
@@ -269,6 +289,8 @@
   padding: 6px;
   box-shadow: none;
     box-sizing: border-box;
+  transition: var(--transition);
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .product-image-container {
@@ -277,13 +299,17 @@
   border-radius: 4px;
     background: var(--surface-alt);
   box-shadow: none;
-  transition: transform 0.15s ease;
+  transition: var(--transition);
   cursor: pointer;
-  }
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
   .product-image-container:hover {
-  transform: translateY(-1px);
-  opacity: 0.9;
+  transform: translateY(-3px) scale(1.05);
+  opacity: 0.95;
+  box-shadow: var(--shadow-lg);
   }
 
   .product-image-1600 {
@@ -481,6 +507,39 @@
   }
 }
 
+@keyframes fadeInUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(30px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes slideInLeft {
+  from { 
+    opacity: 0; 
+    transform: translateX(-30px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateX(0); 
+  }
+}
+
+@keyframes scaleIn {
+  from { 
+    opacity: 0; 
+    transform: scale(0.8); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
 @keyframes pulse {
   0%, 100% { 
     opacity: 1; 
@@ -488,16 +547,34 @@
   50% { 
     opacity: 0.5; 
   }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
   }
   
   /* ================= Responsive ================= */
-  @media (max-width: 1024px) {
-    .snipe-image-gallery {
+@media (max-width: 1024px) {
+  .snipe-image-gallery {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    transition: var(--transition);
   }
   
   .snipe-container {
     padding: 6px 10px 10px;
+    transition: var(--transition);
+  }
+  
+  .snipe-controls,
+  .image-controls {
+    gap: 3px;
+    padding: 5px 7px;
+    transition: var(--transition);
   }
 }
 
@@ -507,57 +584,81 @@
     flex-direction: column; 
     align-items: stretch; 
     gap: 6px;
+    transition: var(--transition);
   }
   
   .snipe-btn { 
     width: 100%; 
     justify-content: center;
+    transition: var(--transition);
   }
   
   .compact-input-group { 
     flex-direction: column; 
     width: 100%; 
+    transition: var(--transition);
   }
   
   .input-field { 
     width: 100%; 
+    transition: var(--transition);
   }
   
   .calculator-modal { 
     width: 95vw; 
     margin: 10px;
+    transition: var(--transition);
   }
   
   .snipe-container {
     padding: 6px 8px 8px;
+    transition: var(--transition);
   }
+  
+  .snipe-image-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 4px;
+    transition: var(--transition);
   }
+}
   
   @media (max-width: 480px) {
   .snipe-btn { 
     font-size: 12px; 
     padding: 6px 10px; 
+    transition: var(--transition);
   }
   
   .title-row { 
     flex-direction: column; 
     align-items: stretch; 
     gap: 4px; 
+    transition: var(--transition);
   }
   
   .snipe-image-gallery { 
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
-    gap: 6px;
-    padding: 6px;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); 
+    gap: 4px;
+    padding: 4px;
+    transition: var(--transition);
   }
   
   .product-image-1600 {
-    height: 100px;
+    height: 80px;
+    transition: var(--transition);
   }
   
   .snipe-container {
     padding: 4px 6px 6px;
-    gap: 6px;
+    gap: 4px;
+    transition: var(--transition);
+  }
+  
+  .snipe-controls,
+  .image-controls {
+    padding: 4px 6px;
+    gap: 3px;
+    transition: var(--transition);
   }
 }
 
