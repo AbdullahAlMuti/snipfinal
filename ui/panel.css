@@ -14,8 +14,9 @@
   --border: #e2e8f0;
   --text: #1e293b;
   --muted: #64748b;
-  --radius: 10px;
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --radius: 6px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
   font-family: "Inter", "Segoe UI", system-ui, sans-serif;
 }
 
@@ -44,10 +45,10 @@ html, body {
 .snipe-container {
   width: 100%;
   margin: 0;
-  padding: 12px 20px 24px;
+  padding: 8px 12px 12px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
   box-sizing: border-box;
 }
 
@@ -59,10 +60,10 @@ html, body {
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
-  gap: 10px;
-  padding: 12px 16px;
+  gap: 6px;
+  padding: 8px 12px;
   border-radius: var(--radius);
-  background: var(--surface-alt);
+  background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
   box-sizing: border-box;
@@ -71,14 +72,14 @@ html, body {
 /* ================= Buttons ================= */
 .snipe-btn {
   border: none;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 14px;
-  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 6px 12px;
   cursor: pointer;
   color: #fff;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -86,7 +87,7 @@ html, body {
   white-space: nowrap;
   position: relative;
   overflow: hidden;
-  min-height: 44px;
+  min-height: 32px;
 }
 
 .snipe-btn::before {
@@ -105,13 +106,13 @@ html, body {
 }
 
 .snipe-btn:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: var(--shadow-lg);
 }
 
 .snipe-btn:active {
-  transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  transform: translateY(0) scale(0.98);
+  box-shadow: var(--shadow);
 }
 
 .snipe-btn:disabled {
@@ -172,32 +173,31 @@ html, body {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 6px 10px;
+  padding: 4px 8px;
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
-  min-height: 40px;
+  min-height: 32px;
 }
 
 .input-field {
   display: flex;
   align-items: center;
-  gap: 6px;
-  border-radius: 8px;
+  gap: 4px;
+  border-radius: var(--radius);
   background: #ffffff;
-  padding: 8px 12px;
-  height: 40px;
-  border: 2px solid var(--border);
+  padding: 4px 8px;
+  height: 28px;
+  border: 1px solid var(--border);
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .input-field:focus-within {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  transform: translateY(-1px);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
 .input-field input,
@@ -205,7 +205,7 @@ html, body {
   border: none;
   background: transparent;
   outline: none;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text);
   flex: 1;
   min-width: 0;
@@ -246,13 +246,13 @@ html, body {
 /* ================= Image Gallery ================= */
 .snipe-image-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
   width: 100%;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 8px;
   box-shadow: var(--shadow);
   box-sizing: border-box;
 }
@@ -268,13 +268,13 @@ html, body {
 }
 
 .product-image-container:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 .product-image-1600 {
   width: 100%;
-  height: 180px;
+  height: 120px;
   object-fit: cover;
   border-radius: var(--radius);
   display: block;
@@ -282,15 +282,15 @@ html, body {
 
 .image-delete-btn {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 26px;
-  height: 26px;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
   border: none;
   background: var(--danger);
   color: white;
   border-radius: 50%;
-  font-size: 16px;
+  font-size: 12px;
   cursor: pointer;
   opacity: 0;
   transition: all 0.2s ease;
@@ -323,10 +323,11 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border);
   transition: background 0.2s ease;
   cursor: pointer;
+  font-size: 13px;
 }
 
 .title-row:last-child {
@@ -339,7 +340,7 @@ html, body {
 
 .title-row.selected { 
   background: #e0f2fe; 
-  border-left: 4px solid var(--primary);
+  border-left: 3px solid var(--primary);
 }
 
 .title-row.selected:hover {
@@ -364,10 +365,10 @@ html, body {
 
 .calculator-modal {
   background: var(--surface);
-  border-radius: 16px;
-  width: 500px;
+  border-radius: 12px;
+  width: 400px;
   max-width: 95vw;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-lg);
   animation: slideUp 0.3s ease;
   overflow: hidden;
 }
@@ -375,17 +376,17 @@ html, body {
 .calculator-header {
   background: linear-gradient(135deg, var(--warning), #f97316);
   color: #fff;
-  padding: 16px 20px;
+  padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 .calculator-content {
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 /* ================= Utility Classes ================= */
@@ -478,11 +479,11 @@ html, body {
 /* ================= Responsive ================= */
 @media (max-width: 1024px) {
   .snipe-image-gallery {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
   
   .snipe-container {
-    padding: 10px 16px 20px;
+    padding: 6px 10px 10px;
   }
 }
 
@@ -491,7 +492,7 @@ html, body {
   .image-controls { 
     flex-direction: column; 
     align-items: stretch; 
-    gap: 8px;
+    gap: 6px;
   }
   
   .snipe-btn { 
@@ -510,18 +511,18 @@ html, body {
   
   .calculator-modal { 
     width: 95vw; 
-    margin: 20px;
+    margin: 10px;
   }
   
   .snipe-container {
-    padding: 8px 12px 16px;
+    padding: 6px 8px 8px;
   }
 }
 
 @media (max-width: 480px) {
   .snipe-btn { 
     font-size: 12px; 
-    padding: 8px 10px; 
+    padding: 6px 10px; 
   }
   
   .title-row { 
@@ -531,18 +532,18 @@ html, body {
   }
   
   .snipe-image-gallery { 
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
-    gap: 12px;
-    padding: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); 
+    gap: 6px;
+    padding: 6px;
   }
   
   .product-image-1600 {
-    height: 140px;
+    height: 100px;
   }
   
   .snipe-container {
-    padding: 6px 8px 12px;
-    gap: 12px;
+    padding: 4px 6px 6px;
+    gap: 6px;
   }
 }
 
