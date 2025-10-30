@@ -42,42 +42,42 @@
     z-index: 99;
   }
   
-.snipe-container {
-  width: 100%;
-  margin: 0;
+  .snipe-container {
+    width: 100%;
+    margin: 0;
   padding: 6px 8px 8px;
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
   gap: 6px;
-  box-sizing: border-box;
-}
+    box-sizing: border-box;
+  }
   
   /* ================= Control Bars ================= */
-.snipe-controls,
-.image-controls {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-start;
+  .snipe-controls,
+  .image-controls {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
   gap: 4px;
   padding: 6px 8px;
   border-radius: 4px;
   background: var(--surface);
-  border: 1px solid var(--border);
+    border: 1px solid var(--border);
   box-shadow: none;
-  box-sizing: border-box;
-}
+    box-sizing: border-box;
+  }
   
   /* ================= Buttons ================= */
-.snipe-btn {
-  border: none;
+  .snipe-btn {
+    border: none;
   border-radius: 4px;
   font-weight: 500;
   font-size: 12px;
   padding: 4px 8px;
-  cursor: pointer;
-  color: #fff;
+    cursor: pointer;
+    color: #fff;
   transition: all 0.15s ease;
   box-shadow: none;
   display: inline-flex;
@@ -169,30 +169,34 @@
 }
   
   /* ================= Inputs ================= */
-.compact-input-group {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
+  .compact-input-group {
+    display: flex;
+  flex-wrap: nowrap;
+    align-items: center;
+  gap: 3px;
   background: transparent;
   border: none;
   border-radius: 0;
   padding: 0;
   box-shadow: none;
   min-height: auto;
-}
+  width: auto;
+  max-width: 300px;
+  }
   
-.input-field {
-  display: flex;
-  align-items: center;
-  gap: 3px;
+  .input-field {
+    display: flex;
+    align-items: center;
+  gap: 2px;
   border-radius: 4px;
   background: #ffffff;
-  padding: 3px 6px;
-  height: 24px;
+  padding: 2px 4px;
+  height: 22px;
   border: 1px solid #d1d5db;
   transition: border-color 0.15s ease;
   box-shadow: none;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .input-field:focus-within {
@@ -205,11 +209,12 @@
   border: none;
   background: transparent;
   outline: none;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text);
   flex: 1;
   min-width: 0;
   font-weight: 400;
+  width: 100%;
 }
 
 .input-field input::placeholder {
@@ -244,41 +249,41 @@
 }
   
   /* ================= Image Gallery ================= */
-.snipe-image-gallery {
-  display: grid;
+  .snipe-image-gallery {
+    display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 6px;
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
   border-radius: 4px;
   padding: 6px;
   box-shadow: none;
-  box-sizing: border-box;
-}
+    box-sizing: border-box;
+  }
 
-.product-image-container {
-  position: relative;
-  overflow: hidden;
+  .product-image-container {
+    position: relative;
+    overflow: hidden;
   border-radius: 4px;
-  background: var(--surface-alt);
+    background: var(--surface-alt);
   box-shadow: none;
   transition: transform 0.15s ease;
   cursor: pointer;
-}
+  }
 
-.product-image-container:hover {
+  .product-image-container:hover {
   transform: translateY(-1px);
   opacity: 0.9;
-}
+  }
 
-.product-image-1600 {
-  width: 100%;
+  .product-image-1600 {
+    width: 100%;
   height: 100px;
-  object-fit: cover;
+    object-fit: cover;
   border-radius: 4px;
   display: block;
-}
+  }
 
   .image-delete-btn {
     position: absolute;
@@ -319,12 +324,12 @@
   overflow: hidden;
   }
 
-.title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  .title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   padding: 6px 8px;
-  border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
   transition: background 0.15s ease;
   cursor: pointer;
   font-size: 12px;
