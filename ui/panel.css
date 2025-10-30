@@ -42,44 +42,44 @@
     z-index: 99;
   }
   
-  .snipe-container {
-    width: 100%;
-    margin: 0;
-  padding: 8px 12px 12px;
-    display: flex;
-    flex-direction: column;
-  gap: 8px;
-    box-sizing: border-box;
-  }
+.snipe-container {
+  width: 100%;
+  margin: 0;
+  padding: 6px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+}
   
   /* ================= Control Bars ================= */
-  .snipe-controls,
-  .image-controls {
-    width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-start;
-  gap: 6px;
-  padding: 8px 12px;
-    border-radius: var(--radius);
+.snipe-controls,
+.image-controls {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 4px;
   background: var(--surface);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    box-sizing: border-box;
-  }
+  border: 1px solid var(--border);
+  box-shadow: none;
+  box-sizing: border-box;
+}
   
   /* ================= Buttons ================= */
-  .snipe-btn {
-    border: none;
-    border-radius: var(--radius);
-    font-weight: 600;
-    font-size: 13px;
-  padding: 6px 12px;
-    cursor: pointer;
-    color: #fff;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow);
+.snipe-btn {
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 12px;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.15s ease;
+  box-shadow: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -87,7 +87,7 @@
   white-space: nowrap;
   position: relative;
   overflow: hidden;
-  min-height: 32px;
+  min-height: 28px;
 }
 
 .snipe-btn::before {
@@ -106,13 +106,13 @@
 }
 
   .snipe-btn:hover {
-  transform: translateY(-1px) scale(1.02);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
+  opacity: 0.9;
 }
 
 .snipe-btn:active {
-  transform: translateY(0) scale(0.98);
-  box-shadow: var(--shadow);
+  transform: translateY(0);
+  opacity: 0.8;
 }
 
 .snipe-btn:disabled {
@@ -173,7 +173,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -185,13 +185,13 @@
 .input-field {
   display: flex;
   align-items: center;
-  gap: 4px;
-  border-radius: var(--radius);
+  gap: 3px;
+  border-radius: 4px;
   background: #ffffff;
-  padding: 4px 8px;
-  height: 28px;
+  padding: 3px 6px;
+  height: 24px;
   border: 1px solid #d1d5db;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.15s ease;
   box-shadow: none;
 }
 
@@ -200,16 +200,16 @@
   box-shadow: none;
 }
 
-  .input-field input,
-  .input-field select {
-    border: none;
-    background: transparent;
-    outline: none;
-    font-size: 13px;
-    color: var(--text);
-    flex: 1;
+.input-field input,
+.input-field select {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 12px;
+  color: var(--text);
+  flex: 1;
   min-width: 0;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .input-field input::placeholder {
@@ -244,41 +244,41 @@
 }
   
   /* ================= Image Gallery ================= */
-  .snipe-image-gallery {
-    display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 8px;
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-  padding: 8px;
-    box-shadow: var(--shadow);
-    box-sizing: border-box;
-  }
+.snipe-image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 6px;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px;
+  box-shadow: none;
+  box-sizing: border-box;
+}
 
-  .product-image-container {
-    position: relative;
-    overflow: hidden;
-    border-radius: var(--radius);
-    background: var(--surface-alt);
-    box-shadow: var(--shadow);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+.product-image-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--surface-alt);
+  box-shadow: none;
+  transition: transform 0.15s ease;
   cursor: pointer;
-  }
+}
 
-  .product-image-container:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-  }
+.product-image-container:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
 
-  .product-image-1600 {
-    width: 100%;
-  height: 120px;
-    object-fit: cover;
-    border-radius: var(--radius);
+.product-image-1600 {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
   display: block;
-  }
+}
 
   .image-delete-btn {
     position: absolute;
@@ -319,15 +319,15 @@
   overflow: hidden;
   }
 
-  .title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  padding: 8px 12px;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.2s ease;
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s ease;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .title-row:last-child {
