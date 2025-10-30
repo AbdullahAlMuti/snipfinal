@@ -217,6 +217,11 @@
   width: 100%;
 }
 
+.sku-field input {
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .input-field input::placeholder {
   color: var(--muted);
   font-weight: 400;
@@ -231,6 +236,8 @@
 .price-field { 
   background: #ffffff;
   border-color: #d1d5db;
+  min-width: 80px;
+  flex-grow: 1;
 }
 
 .price-field:focus-within {
@@ -241,6 +248,8 @@
 .sku-field { 
   background: #ffffff;
   border-color: #d1d5db;
+  min-width: 120px;
+  flex-grow: 2;
 }
 
 .sku-field:focus-within {
