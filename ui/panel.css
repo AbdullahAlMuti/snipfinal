@@ -2,82 +2,82 @@
    ⚡ SNIPE PANEL - FULL WIDTH AESTHETIC EDITION
    ============================================================ */
 
-:root {
-  --primary: #3b82f6;
-  --primary-dark: #2563eb;
-  --secondary: #8b5cf6;
-  --accent: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --surface: #ffffff;
-  --surface-alt: #f8fafc;
-  --border: #e2e8f0;
-  --text: #1e293b;
-  --muted: #64748b;
+   :root {
+    --primary: #3b82f6;
+    --primary-dark: #2563eb;
+    --secondary: #8b5cf6;
+    --accent: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --surface: #ffffff;
+    --surface-alt: #f8fafc;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --muted: #64748b;
   --radius: 6px;
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
-  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-}
-
-/* ================= Base ================= */
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f9fafb, #eef2ff);
-  color: var(--text);
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-/* ================= Root Wrapper ================= */
-#snipe-root-wrapper {
-  width: 100%;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  border-bottom: 1px solid var(--border);
-  position: relative;
-  z-index: 99;
-}
-
-.snipe-container {
-  width: 100%;
-  margin: 0;
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  }
+  
+  /* ================= Base ================= */
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f9fafb, #eef2ff);
+    color: var(--text);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  
+  /* ================= Root Wrapper ================= */
+  #snipe-root-wrapper {
+    width: 100%;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    z-index: 99;
+  }
+  
+  .snipe-container {
+    width: 100%;
+    margin: 0;
   padding: 8px 12px 12px;
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
   gap: 8px;
-  box-sizing: border-box;
-}
-
-/* ================= Control Bars ================= */
-.snipe-controls,
-.image-controls {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-start;
+    box-sizing: border-box;
+  }
+  
+  /* ================= Control Bars ================= */
+  .snipe-controls,
+  .image-controls {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
   gap: 6px;
   padding: 8px 12px;
-  border-radius: var(--radius);
+    border-radius: var(--radius);
   background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  box-sizing: border-box;
-}
-
-/* ================= Buttons ================= */
-.snipe-btn {
-  border: none;
-  border-radius: var(--radius);
-  font-weight: 600;
-  font-size: 13px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    box-sizing: border-box;
+  }
+  
+  /* ================= Buttons ================= */
+  .snipe-btn {
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 13px;
   padding: 6px 12px;
-  cursor: pointer;
-  color: #fff;
+    cursor: pointer;
+    color: #fff;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--shadow);
   display: inline-flex;
@@ -105,7 +105,7 @@ html, body {
   left: 100%;
 }
 
-.snipe-btn:hover {
+  .snipe-btn:hover {
   transform: translateY(-1px) scale(1.02);
   box-shadow: var(--shadow-lg);
 }
@@ -155,7 +155,7 @@ html, body {
 
 #refresh-images-btn:hover {
   background: linear-gradient(135deg, #4f46e5, #3730a3);
-  transform: translateY(-2px) scale(1.03);
+    transform: translateY(-2px) scale(1.03);
 }
 
 /* Default button fallback */
@@ -167,30 +167,30 @@ html, body {
 .snipe-btn:not([class*="snipe-btn-"]):hover {
   background: linear-gradient(135deg, #4b5563, #374151);
 }
-
-/* ================= Inputs ================= */
-.compact-input-group {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  
+  /* ================= Inputs ================= */
+  .compact-input-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
   gap: 4px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
   padding: 4px 8px;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
   min-height: 32px;
-}
-
-.input-field {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  }
+  
+  .input-field {
+    display: flex;
+    align-items: center;
+    gap: 4px;
   border-radius: var(--radius);
   background: #ffffff;
-  padding: 4px 8px;
+    padding: 4px 8px;
   height: 28px;
-  border: 1px solid var(--border);
+    border: 1px solid var(--border);
   transition: all 0.2s ease;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
 }
@@ -200,14 +200,14 @@ html, body {
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
-.input-field input,
-.input-field select {
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 13px;
-  color: var(--text);
-  flex: 1;
+  .input-field input,
+  .input-field select {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 13px;
+    color: var(--text);
+    flex: 1;
   min-width: 0;
   font-weight: 500;
 }
@@ -219,81 +219,81 @@ html, body {
 
 .input-field select {
   cursor: pointer;
-  font-weight: 600;
-  color: var(--primary);
+  font-weight: 500;
+  color: var(--text);
 }
 
 .price-field { 
-  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
-  border-color: #22c55e;
+  background: #ffffff;
+  border-color: var(--border);
 }
 
 .price-field:focus-within {
-  border-color: #16a34a;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
 .sku-field { 
-  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
-  border-color: #0ea5e9;
+  background: #ffffff;
+  border-color: var(--border);
 }
 
 .sku-field:focus-within {
-  border-color: #0284c7;
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
-
-/* ================= Image Gallery ================= */
-.snipe-image-gallery {
-  display: grid;
+  
+  /* ================= Image Gallery ================= */
+  .snipe-image-gallery {
+    display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 8px;
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
   padding: 8px;
-  box-shadow: var(--shadow);
-  box-sizing: border-box;
-}
+    box-shadow: var(--shadow);
+    box-sizing: border-box;
+  }
 
-.product-image-container {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--radius);
-  background: var(--surface-alt);
-  box-shadow: var(--shadow);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  .product-image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--surface-alt);
+    box-shadow: var(--shadow);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
   cursor: pointer;
-}
+  }
 
-.product-image-container:hover {
+  .product-image-container:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
-}
+  }
 
-.product-image-1600 {
-  width: 100%;
+  .product-image-1600 {
+    width: 100%;
   height: 120px;
-  object-fit: cover;
-  border-radius: var(--radius);
+    object-fit: cover;
+    border-radius: var(--radius);
   display: block;
-}
+  }
 
-.image-delete-btn {
-  position: absolute;
+  .image-delete-btn {
+    position: absolute;
   top: 4px;
   right: 4px;
   width: 20px;
   height: 20px;
-  border: none;
-  background: var(--danger);
-  color: white;
-  border-radius: 50%;
+    border: none;
+    background: var(--danger);
+    color: white;
+    border-radius: 50%;
   font-size: 12px;
-  cursor: pointer;
-  opacity: 0;
-  transition: all 0.2s ease;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -308,24 +308,24 @@ html, body {
 .product-image-container:hover .image-delete-btn { 
   opacity: 1; 
 }
-
-/* ================= Title List ================= */
-.snipe-title-list {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  
+  /* ================= Title List ================= */
+  .snipe-title-list {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
   overflow: hidden;
-}
+  }
 
-.title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  .title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.2s ease;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s ease;
   cursor: pointer;
   font-size: 13px;
 }
@@ -346,46 +346,46 @@ html, body {
 .title-row.selected:hover {
   background: #bae6fd;
 }
-
-/* ================= Calculator Popup ================= */
-.calculator-popup {
-  position: fixed;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.35);
-  backdrop-filter: blur(6px);
-  z-index: 1000;
-}
+  
+  /* ================= Calculator Popup ================= */
+  .calculator-popup {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+  }
 
 .calculator-popup.show { 
   display: flex; 
 }
 
-.calculator-modal {
-  background: var(--surface);
+  .calculator-modal {
+    background: var(--surface);
   border-radius: 12px;
   width: 400px;
-  max-width: 95vw;
+    max-width: 95vw;
   box-shadow: var(--shadow-lg);
-  animation: slideUp 0.3s ease;
-  overflow: hidden;
-}
+    animation: slideUp 0.3s ease;
+    overflow: hidden;
+  }
 
-.calculator-header {
-  background: linear-gradient(135deg, var(--warning), #f97316);
-  color: #fff;
+  .calculator-header {
+    background: linear-gradient(135deg, var(--warning), #f97316);
+    color: #fff;
   padding: 12px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
-.calculator-content {
+  .calculator-content {
   padding: 16px;
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
   gap: 8px;
 }
 
@@ -444,10 +444,10 @@ html, body {
 
 .h-full {
   height: 100%;
-}
-
-/* ================= Animations ================= */
-@keyframes slideUp {
+  }
+  
+  /* ================= Animations ================= */
+  @keyframes slideUp {
   from { 
     opacity: 0; 
     transform: translateY(20px); 
@@ -474,11 +474,11 @@ html, body {
   50% { 
     opacity: 0.5; 
   }
-}
-
-/* ================= Responsive ================= */
-@media (max-width: 1024px) {
-  .snipe-image-gallery {
+  }
+  
+  /* ================= Responsive ================= */
+  @media (max-width: 1024px) {
+    .snipe-image-gallery {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
   
@@ -517,9 +517,9 @@ html, body {
   .snipe-container {
     padding: 6px 8px 8px;
   }
-}
-
-@media (max-width: 480px) {
+  }
+  
+  @media (max-width: 480px) {
   .snipe-btn { 
     font-size: 12px; 
     padding: 6px 10px; 
@@ -728,3 +728,4 @@ button, input, select { line-height: 1; font-family: inherit; }
 
 /* 10) Reduce outer glow on sections for a calmer look */
 #snipe-root-wrapper { background: linear-gradient(180deg, #f7f9fc 0%, #f3f6fb 100%); }
+  
