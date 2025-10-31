@@ -18,19 +18,13 @@
         <button class="snipe-btn snipe-btn-details" id="product-details-btn">📋 Product Details</button>
         <button class="snipe-btn snipe-btn-calculator" id="calculator-btn">💰 Calculator</button>
         <button class="snipe-btn snipe-btn-quick-calc" id="quick-calc-btn" title="Quick Calculate">💲</button>
-        <div class="compact-input-group">
-            <div class="input-field price-field">
-                <input type="text" value="219.99" placeholder="💰 Sell it for" aria-label="Sell it for price">
-            </div>
-            <div class="input-field sku-field">
-                <select id="sku-prefix" aria-label="SKU prefix">
-                    <option value="AB">AB</option>
-                    <option value="RC">RC</option>
-                </select>
-                <input type="text" id="sku-input" placeholder="🏷️ SKU" readonly aria-label="Generated SKU">
-            </div>
-            <button id="generate-sku-btn" class="snipe-btn snipe-btn-generate" title="Generate SKU">Generate</button>
-        </div>
+        <input type="text" id="sell-it-for-input" value="" placeholder="💰 Sell it for" aria-label="Sell it for price">
+        <select id="sku-prefix" aria-label="SKU prefix">
+            <option value="AB">AB</option>
+            <option value="RC">RC</option>
+        </select>
+        <input type="text" id="sku-input" placeholder="🏷️ SKU" readonly aria-label="Generated SKU">
+        <button id="generate-sku-btn" class="snipe-btn snipe-btn-generate" title="Generate SKU">Generate</button>
     </div>
 </div>
 

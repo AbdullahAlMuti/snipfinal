@@ -5,7 +5,8 @@
   "description": "Scrapes and watermarks Amazon product data to streamline the eBay listing process.",
   "permissions": [
     "storage",
-    "scripting"
+    "scripting",
+    "tabs"
   ],
   "host_permissions": [
     "https://www.ebay.com/sl/prelist/*",

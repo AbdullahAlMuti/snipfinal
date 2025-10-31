@@ -33,6 +33,12 @@ const injectUI = async () => {
             snipeTitleBtn.click();
         }
     }, 500); // Small delay to ensure everything is loaded
+    
+    // Auto-calculate price when panel loads
+    setTimeout(() => {
+        console.log('🔄 Auto-calculating price on panel load...');
+        quickCalculate();
+    }, 1500); // Wait for panel to be fully ready
 };
 
 // Enhanced product details scraping function
@@ -1319,8 +1325,18 @@ const addEventListenersToPanel = () => {
                     const sku = document.getElementById('sku-input').value;
                     
                     // Get the price from the "Sell it for" field
-                    const priceInput = document.querySelector('.snipe-input-group input[type="text"]');
-                    const price = priceInput ? priceInput.value : '219.99'; // Default fallback
+                    const priceInput = document.getElementById('sell-it-for-input') || 
+                                      document.querySelector('.price-field input[type="text"]') ||
+                                      document.querySelector('input[aria-label*="Sell it for" i]');
+                    const price = priceInput ? priceInput.value.trim() : ''; // Empty default - should be calculated
+                    
+                    if (!price || price === '') {
+                        console.warn('⚠️ No price in "Sell it for" field. Please calculate price first.');
+                        alert("Please calculate the price first using the calculator (💰 Calculator or 💲 Quick Calculate button).");
+                        btn.disabled = false;
+                        btn.textContent = 'Opti-List';
+                        return;
+                    }
 
                     // Validation check for the SKU
                     if (!sku) {
@@ -2059,7 +2075,10 @@ function quickCalculate() {
     const finalPrice = baseCost / (1 - totalPercentage);
     
     // Auto-fill "Sell it for" field
-    const sellItForInput = document.querySelector('input[type="text"][value="219.99"]');
+    const sellItForInput = document.getElementById('sell-it-for-input') || 
+                           document.querySelector('input[aria-label*="Sell it for" i]') ||
+                           document.querySelector('.price-field input[type="text"]') ||
+                           document.querySelector('input[placeholder*="Sell it for" i]');
     if (sellItForInput) {
         sellItForInput.value = finalPrice.toFixed(2);
         sellItForInput.style.backgroundColor = '#e8f5e8';
@@ -2122,7 +2141,10 @@ function calculatePrice() {
     }
     
     // Auto-fill "Sell it for" field outside the popup
-    const sellItForInput = document.querySelector('input[type="text"][value="219.99"]');
+    const sellItForInput = document.getElementById('sell-it-for-input') || 
+                           document.querySelector('input[aria-label*="Sell it for" i]') ||
+                           document.querySelector('.price-field input[type="text"]') ||
+                           document.querySelector('input[placeholder*="Sell it for" i]');
     if (sellItForInput) {
         sellItForInput.value = finalPrice.toFixed(2);
         sellItForInput.style.backgroundColor = '#e8f5e8';

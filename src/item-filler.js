@@ -1,13 +1,11 @@
 /**
- * @fileoverview eBay Item Specifics Filler with "Find Keyword and Click First" Algorithm
- * @description Simple, direct automation that finds legends and clicks first suggestions
- * @version 6.0.0 - Find Keyword and Click First Algorithm
+ * @fileoverview eBay Item Specifics Filler
+ * @version 6.0.0
  */
 
 class SimpleItemFillerSystem {
     constructor() {
         this.logger = window.logger || new Logger();
-        this.logger.info('✅ SimpleItemFillerSystem initialized with "Find Keyword and Click First" algorithm.');
     }
 
     async run() {
@@ -16,12 +14,8 @@ class SimpleItemFillerSystem {
         // STEP 1: Smart Wait for "Apply all" button (MOST IMPORTANT)
         await this.smartWaitForApplyAll();
 
-        // STEP 2: Find and click first suggestions (only if explicitly enabled)
-        if (window.enableItemFillerSuggestions !== false) {
-            await this.findAndClickFirstSuggestions();
-        } else {
-            this.logger.info('ℹ️ Item filler suggestions disabled');
-        }
+        // STEP 2: Find and click first suggestions
+        await this.findAndClickFirstSuggestions();
 
         // STEP 3: Fill description if available
         await this.fillDescription();
@@ -41,56 +35,32 @@ class SimpleItemFillerSystem {
         const startTime = Date.now();
         let applyButton = null;
         
-        // Wait up to 15 seconds for the button to become enabled
-        while (Date.now() - startTime < 15000) {
-            // Find the "Apply all" button with multiple strategies
-            const applyAllSelectors = [
-                'button[data-testid*="apply-all"]',
-                'button[class*="apply-all"]',
-                'button[class*="applyAll"]',
-                'button[class*="apply_all"]',
-                'input[type="button"][value*="Apply all"]',
-                'input[type="submit"][value*="Apply all"]',
-                '[role="button"]:contains("Apply all")'
-            ];
+        // Wait up to 10 seconds for the button to become enabled
+        while (Date.now() - startTime < 10000) {
+            // Find the "Apply all" button
+            const buttons = document.querySelectorAll('button, a');
             
-            // Try selectors first
-            for (const selector of applyAllSelectors) {
-                try {
-                    applyButton = document.querySelector(selector);
-                    if (applyButton) break;
-                } catch (e) {
-                    // Invalid selector, continue
-                }
-            }
-            
-            // If not found with selectors, search by text content
-            if (!applyButton) {
-                const buttons = document.querySelectorAll('button, a, input[type="button"], input[type="submit"], [role="button"]');
-                
-                for (const button of buttons) {
-                    const buttonText = (button.innerText || button.textContent || button.value || '').trim().toLowerCase();
-                    if (buttonText === 'apply all' || buttonText === 'applyall' || buttonText.includes('apply all')) {
-                        applyButton = button;
-                        break;
-                    }
+            for (const button of buttons) {
+                const buttonText = button.innerText && button.innerText.trim().toLowerCase();
+                if (buttonText === 'apply all') {
+                    applyButton = button;
+                    break;
                 }
             }
             
             if (applyButton) {
-                // Check if button is enabled and visible
+                // Check if button is enabled (disabled attribute removed)
                 const isDisabled = applyButton.hasAttribute('disabled') || 
                                  applyButton.disabled || 
-                                 applyButton.classList.contains('disabled') ||
-                                 applyButton.offsetParent === null;
+                                 applyButton.classList.contains('disabled');
                 
                 if (!isDisabled) {
                     this.logger.info('✅ "Apply all" button is now enabled! Clicking...');
                     applyButton.click();
-                    await this.sleep(3000); // Wait for page to process
+                    await this.sleep(2000); // Wait for page to process
                     return true;
                 } else {
-                    this.logger.info('⏳ "Apply all" button found but still disabled or hidden. Waiting...');
+                    this.logger.info('⏳ "Apply all" button found but still disabled. Waiting...');
                 }
             } else {
                 this.logger.info('⏳ "Apply all" button not found yet. Waiting...');
@@ -109,9 +79,6 @@ class SimpleItemFillerSystem {
     async findAndClickFirstSuggestions() {
         this.logger.info('🔍 Starting "Find Keyword and Click First" algorithm...');
         
-        // Wait a bit for the page to load suggestions
-        await this.sleep(2000);
-        
         // Search the entire page for all <legend> elements
         const legends = document.querySelectorAll('legend');
         this.logger.info(`📋 Found ${legends.length} legend elements on the page`);
@@ -120,23 +87,12 @@ class SimpleItemFillerSystem {
         
         // Loop through each legend
         for (const legend of legends) {
-            const legendText = (legend.innerText || legend.textContent || '').trim();
+            const legendText = legend.innerText && legend.innerText.trim();
             
-            // Check if legend text contains suggestion keywords
-            const suggestionKeywords = [
-                'frequently selected',
-                'suggested',
-                'recommended',
-                'popular',
-                'most selected',
-                'top choices'
-            ];
-            
-            const hasSuggestionKeyword = suggestionKeywords.some(keyword => 
-                legendText.toLowerCase().includes(keyword)
-            );
-            
-            if (legendText && hasSuggestionKeyword) {
+            // Check if legend text contains "Frequently selected:" or "Suggested:"
+            if (legendText && (legendText.toLowerCase().includes('frequently selected') || 
+                             legendText.toLowerCase().includes('suggested'))) {
+                
                 this.logger.info(`🎯 Found suggestion legend: "${legendText}"`);
                 
                 try {
@@ -156,12 +112,9 @@ class SimpleItemFillerSystem {
                         this.logger.info(`✅ Successfully clicked suggestion for legend: "${legendText}"`);
                         
                         // Human-like delay before moving to next legend
-                        await this.sleep(1500);
+                        await this.sleep(1000);
                     } else {
-                        // Only log warning for first few failures to reduce spam
-                        if (processedCount < 3) {
-                            this.logger.warn(`⚠️ Could not click suggestion for legend: "${legendText}"`);
-                        }
+                        this.logger.warn(`⚠️ Could not click suggestion for legend: "${legendText}"`);
                     }
                     
                 } catch (error) {
@@ -170,61 +123,7 @@ class SimpleItemFillerSystem {
             }
         }
         
-        // Also look for suggestion buttons without legends
-        await this.clickSuggestionButtonsWithoutLegends();
-        
         this.logger.info(`🎉 Processed ${processedCount} suggestion legends`);
-    }
-    
-    /**
-     * Click suggestion buttons that don't have legends
-     */
-    async clickSuggestionButtonsWithoutLegends() {
-        this.logger.info('🔍 Looking for suggestion buttons without legends...');
-        
-        // Look for common suggestion button patterns
-        const suggestionButtonSelectors = [
-            'button.fake-link',
-            'button[class*="suggestion"]',
-            'button[class*="recommended"]',
-            'button[class*="popular"]',
-            'button[class*="frequently"]',
-            'a[class*="suggestion"]',
-            'a[class*="recommended"]',
-            'a[class*="popular"]',
-            '[role="button"][class*="suggestion"]'
-        ];
-        
-        let clickedCount = 0;
-        
-        for (const selector of suggestionButtonSelectors) {
-            try {
-                const buttons = document.querySelectorAll(selector);
-                this.logger.info(`🔍 Found ${buttons.length} buttons with selector: ${selector}`);
-                
-                for (const button of buttons) {
-                    // Check if button is clickable and not already processed
-                    if (button.offsetParent !== null && 
-                        !button.disabled && 
-                        !button.classList.contains('processed')) {
-                        
-                        const buttonText = (button.innerText || button.textContent || '').trim();
-                        this.logger.info(`🎯 Clicking suggestion button: "${buttonText}"`);
-                        
-                        button.click();
-                        button.classList.add('processed'); // Mark as processed
-                        clickedCount++;
-                        
-                        // Small delay between clicks
-                        await this.sleep(800);
-                    }
-                }
-            } catch (e) {
-                // Invalid selector, continue
-            }
-        }
-        
-        this.logger.info(`✅ Clicked ${clickedCount} suggestion buttons without legends`);
     }
 
     /**
@@ -273,65 +172,35 @@ class SimpleItemFillerSystem {
      */
     async clickNextButton(legend) {
         try {
-            // Get the parent fieldset
-            const fieldset = legend.closest('fieldset');
-            if (!fieldset) {
-                this.logger.warn('⚠️ No fieldset found for legend');
+            // Get the element that comes immediately after the legend
+            const nextElement = legend.nextElementSibling;
+            
+            if (!nextElement) {
+                this.logger.warn('⚠️ No element found after legend');
                 return false;
             }
             
-            // Look for clickable elements in the fieldset
-            const clickableSelectors = [
-                'button.fake-link',
-                'button[class*="suggestion"]',
-                'button[class*="recommended"]',
-                'button[class*="popular"]',
-                'a[class*="suggestion"]',
-                'a[class*="recommended"]',
-                'a[class*="popular"]',
-                '[role="button"]',
-                'button:not([disabled])',
-                'a:not([disabled])'
-            ];
-            
-            for (const selector of clickableSelectors) {
-                try {
-                    const buttons = fieldset.querySelectorAll(selector);
-                    
-                    for (const button of buttons) {
-                        // Check if button is visible and clickable
-                        if (button.offsetParent !== null && 
-                            !button.disabled && 
-                            !button.classList.contains('processed')) {
-                            
-                            const buttonText = (button.innerText || button.textContent || '').trim();
-                            this.logger.info(`🎯 Clicking button: "${buttonText}"`);
-                            
-                            button.click();
-                            button.classList.add('processed'); // Mark as processed
-                            return true;
-                        }
-                    }
-                } catch (e) {
-                    // Invalid selector, continue
-                }
+            // Check if the next element is a button with class "fake-link"
+            if (nextElement.tagName === 'BUTTON' && nextElement.classList.contains('fake-link')) {
+                const buttonText = nextElement.innerText && nextElement.innerText.trim();
+                this.logger.info(`🎯 Clicking next button: "${buttonText}"`);
+                nextElement.click();
+                return true;
             }
             
-            // If no specific buttons found, try the next element after legend
-            const nextElement = legend.nextElementSibling;
-            if (nextElement && (nextElement.tagName === 'BUTTON' || nextElement.tagName === 'A')) {
-                if (nextElement.offsetParent !== null && !nextElement.disabled) {
-                    const buttonText = (nextElement.innerText || nextElement.textContent || '').trim();
-                    this.logger.info(`🎯 Clicking next element: "${buttonText}"`);
-                    nextElement.click();
+            // If next element is not a button, look for the first button.fake-link in the parent fieldset
+            const fieldset = legend.closest('fieldset');
+            if (fieldset) {
+                const firstButton = fieldset.querySelector('button.fake-link');
+                if (firstButton) {
+                    const buttonText = firstButton.innerText && firstButton.innerText.trim();
+                    this.logger.info(`🎯 Clicking first fake-link button in fieldset: "${buttonText}"`);
+                    firstButton.click();
                     return true;
                 }
             }
             
-            // Only log warning occasionally to reduce spam
-            if (Math.random() < 0.3) {
-                this.logger.warn('⚠️ No suitable button found to click in fieldset');
-            }
+            this.logger.warn('⚠️ No suitable button found to click');
             return false;
             
         } catch (error) {
@@ -439,12 +308,6 @@ class SimpleItemFillerSystem {
 
     const logger = window.logger || new Logger();
     logger.info('🚀 Simple Item Filler script loaded with "Find Keyword and Click First" algorithm.');
-
-    // Disable item filler suggestions by default to reduce console spam
-    if (window.enableItemFillerSuggestions === undefined) {
-        window.enableItemFillerSuggestions = false;
-        logger.info('ℹ️ Item filler suggestions disabled by default');
-    }
 
     // Smart timing: Wait for page to be fully interactive
     await new Promise(resolve => setTimeout(resolve, 4000));

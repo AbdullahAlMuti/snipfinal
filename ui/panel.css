@@ -237,11 +237,6 @@
   width: 100%;
 }
 
-.sku-field input {
-  font-size: 12px;
-  font-weight: 500;
-}
-
 .input-field input::placeholder {
   color: var(--muted);
   font-weight: 400;
@@ -253,29 +248,6 @@
   color: var(--text);
 }
 
-.price-field { 
-  background: #ffffff;
-  border-color: #d1d5db;
-  min-width: 80px;
-  flex-grow: 1;
-}
-
-.price-field:focus-within {
-  border-color: #3b82f6;
-  box-shadow: none;
-}
-
-.sku-field { 
-  background: #ffffff;
-  border-color: #d1d5db;
-  min-width: 120px;
-  flex-grow: 2;
-}
-
-.sku-field:focus-within {
-  border-color: #3b82f6;
-  box-shadow: none;
-}
   
   /* ================= Image Gallery ================= */
   .snipe-image-gallery {
@@ -733,10 +705,6 @@ button, input, select { line-height: 1; font-family: inherit; }
 .snipe-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(16,24,40,0.12); }
 .snipe-btn:active { transform: translateY(0); box-shadow: 0 3px 8px rgba(16,24,40,0.10); }
 
-/* 5) Price/SKU chips look like pills and line up */
-.price-field { background: #e9f8ef; border-color: #cdeed9; font-weight: 700; }
-.sku-field { background: #e6f4ff; border-color: #cfe7ff; }
-
 /* 6) Image grid – consistent tiles */
 .snipe-image-gallery {
   display: grid !important;
@@ -844,3 +812,4 @@ button, input, select { line-height: 1; font-family: inherit; }
 /* 10) Reduce outer glow on sections for a calmer look */
 #snipe-root-wrapper { background: linear-gradient(180deg, #f7f9fc 0%, #f3f6fb 100%); }
   
+
