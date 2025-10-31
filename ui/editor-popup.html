@@ -1,92 +1,140 @@
-<div id="snipe-editor-root" class="snipe-editor-overlay" style="display:none">
-  <div class="editor-shell">
+<div id="snipe-editor-root" class="snipe-editor-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Image Editor">
+  <!-- Mobile Sidebar Overlay Backdrop -->
+  <div class="sidebar-overlay" id="sidebar-overlay" aria-hidden="true"></div>
+  
+  <div class="editor-shell light-theme">
     <!-- Left Sidebar -->
-    <aside class="editor-side">
+    <aside class="editor-side" id="editor-side" role="complementary" aria-label="Editor tools and properties">
+      <!-- Sidebar Close Button (Mobile) -->
+      <button id="sidebar-close" class="sidebar-close-btn" aria-label="Close sidebar" title="Close sidebar">
+        <span aria-hidden="true">×</span>
+      </button>
+      
       <!-- Stickers -->
       <div class="side-section">
         <div class="side-head">
           <h4>🎨 Stickers</h4>
-          <label class="upload-btn" title="Upload your own sticker">
-            📁 Upload
-            <input id="sticker-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+          <label class="upload-btn" title="Upload your own sticker" aria-label="Upload sticker">
+            <span class="upload-icon" aria-hidden="true">📁</span>
+            <span class="upload-text">Upload</span>
+            <input id="sticker-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden aria-label="Select sticker image file">
           </label>
         </div>
-        <div id="sticker-gallery" class="sticker-grid">
-          <div class="loading">Loading stickers...</div>
+        <div id="sticker-gallery" class="sticker-grid" role="group" aria-label="Sticker gallery">
+          <div class="loading" aria-live="polite">Loading stickers...</div>
         </div>
       </div>
 
       <!-- Tools -->
       <div class="side-section">
         <h4>🛠️ Tools</h4>
-        <div class="tool-buttons">
-          <button id="btn-clear-all" class="btn-tool" title="Clear all stickers">🗑️ Clear All</button>
-          <button id="btn-duplicate" class="btn-tool" title="Duplicate selected sticker">📋 Duplicate</button>
+        <div class="tool-buttons" role="group" aria-label="Editor tools">
+          <button id="btn-clear-all" class="btn-tool" title="Clear all stickers" aria-label="Clear all stickers">
+            <span class="btn-icon-text" aria-hidden="true">🗑️</span>
+            <span class="btn-text">Clear All</span>
+          </button>
+          <button id="btn-duplicate" class="btn-tool" title="Duplicate selected sticker" aria-label="Duplicate selected sticker">
+            <span class="btn-icon-text" aria-hidden="true">📋</span>
+            <span class="btn-text">Duplicate</span>
+          </button>
         </div>
       </div>
 
       <!-- Properties -->
-      <div class="side-section" id="sticker-properties" style="display:none;">
+      <div class="side-section" id="sticker-properties" style="display:none;" role="group" aria-label="Sticker properties">
         <h4>⚙️ Properties</h4>
         <div class="property-group">
-          <label>Size</label>
-          <input type="range" id="size-slider" min="10" max="200" value="100">
-          <span id="size-value">100%</span>
+          <label for="size-slider">Size</label>
+          <input type="range" id="size-slider" min="10" max="200" value="100" aria-label="Sticker size" aria-valuemin="10" aria-valuemax="200" aria-valuenow="100">
+          <span id="size-value" class="property-value" aria-live="polite">100%</span>
         </div>
         <div class="property-group">
-          <label>Opacity</label>
-          <input type="range" id="opacity-slider" min="10" max="100" value="100">
-          <span id="opacity-value">100%</span>
+          <label for="opacity-slider">Opacity</label>
+          <input type="range" id="opacity-slider" min="10" max="100" value="100" aria-label="Sticker opacity" aria-valuemin="10" aria-valuemax="100" aria-valuenow="100">
+          <span id="opacity-value" class="property-value" aria-live="polite">100%</span>
         </div>
         <div class="property-group">
-          <label>Rotation</label>
-          <input type="range" id="rotation-slider" min="0" max="360" value="0">
-          <span id="rotation-value">0°</span>
+          <label for="rotation-slider">Rotation</label>
+          <input type="range" id="rotation-slider" min="0" max="360" value="0" aria-label="Sticker rotation" aria-valuemin="0" aria-valuemax="360" aria-valuenow="0">
+          <span id="rotation-value" class="property-value" aria-live="polite">0°</span>
         </div>
       </div>
     </aside>
 
     <!-- Top Toolbar -->
-    <header class="editor-header">
-      <h3>🖼️ Image Editor</h3>
-      <div class="header-actions">
-        <button id="btn-undo" class="btn-icon" title="Undo (Ctrl+Z)">↶</button>
-        <button id="btn-redo" class="btn-icon" title="Redo (Ctrl+Y)">↷</button>
-        <button id="btn-zoom-in" class="btn-icon" title="Zoom In">+</button>
-        <button id="btn-zoom-out" class="btn-icon" title="Zoom Out">−</button>
-        <button id="btn-reset" class="btn-icon" title="Reset View">⌂</button>
+    <header class="editor-header" role="banner">
+      <div class="header-left">
+        <button id="sidebar-toggle" class="btn-icon sidebar-toggle-btn" aria-label="Toggle sidebar" title="Toggle sidebar" aria-expanded="false">
+          <span aria-hidden="true">☰</span>
+        </button>
+        <h3>🖼️ Image Editor</h3>
+      </div>
+      <div class="header-actions" role="toolbar" aria-label="Editor actions">
+        <button id="btn-auto-enhance" class="btn-ai" title="Auto Enhance (Ctrl+E)" aria-label="Auto enhance image">
+          <span aria-hidden="true">✨</span>
+          <span>Auto Enhance</span>
+        </button>
+        <button id="btn-clean-bg" class="btn-ai btn-ai-clean" title="Clean Background & Add Shadow (Ctrl+B)" aria-label="Clean background and add shadow">
+          <span aria-hidden="true">🧹</span>
+          <span>Clean BG</span>
+        </button>
+        <div class="toolbar-divider" aria-hidden="true"></div>
+        <button id="btn-undo" class="btn-icon" title="Undo (Ctrl+Z)" aria-label="Undo">
+          <span aria-hidden="true">↶</span>
+        </button>
+        <button id="btn-redo" class="btn-icon" title="Redo (Ctrl+Y)" aria-label="Redo">
+          <span aria-hidden="true">↷</span>
+        </button>
+        <div class="toolbar-divider" aria-hidden="true"></div>
+        <button id="btn-zoom-out" class="btn-icon" title="Zoom Out" aria-label="Zoom out">
+          <span aria-hidden="true">−</span>
+        </button>
+        <span id="zoom-level" class="zoom-level-display" aria-live="polite">100%</span>
+        <button id="btn-zoom-in" class="btn-icon" title="Zoom In" aria-label="Zoom in">
+          <span aria-hidden="true">+</span>
+        </button>
+        <button id="btn-reset" class="btn-icon" title="Reset View" aria-label="Reset zoom">
+          <span aria-hidden="true">⌂</span>
+        </button>
+        <div class="toolbar-divider" aria-hidden="true"></div>
+        <button id="btn-theme-toggle" class="btn-theme-toggle" title="Toggle Dark/Light Theme" aria-label="Toggle theme">
+          <span id="theme-icon" aria-hidden="true">🌙</span>
+        </button>
       </div>
     </header>
 
     <!-- Center Canvas -->
-    <main class="editor-main">
+    <main class="editor-main" role="main" aria-label="Canvas workspace">
       <div class="canvas-container">
-        <canvas id="editor-canvas"></canvas>
-        <div class="canvas-overlay">
-          <div class="zoom-controls"><span id="zoom-level">100%</span></div>
-          <div class="instructions">
-            <p><strong>Tips</strong></p>
-            <ul>
-              <li>Click stickers to add</li>
-              <li>Drag to move, resize from corner</li>
-              <li>Click × or press <kbd>Delete</kbd> to remove</li>
-              <li>Press <kbd>Esc</kbd> to close</li>
-            </ul>
+        <canvas id="editor-canvas" aria-label="Image canvas"></canvas>
+        <div class="canvas-overlay" aria-hidden="true">
+          <div class="zoom-controls">
+            <span id="zoom-level-overlay">100%</span>
+          </div>
+        </div>
+        <div class="loading-overlay" id="loading-overlay" aria-hidden="true">
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Enhancing...</div>
           </div>
         </div>
       </div>
     </main>
 
     <!-- Bottom Bar -->
-    <footer class="status-bar">
-      <div>
-        <span id="sticker-count">0 stickers</span> •
+    <footer class="status-bar" role="contentinfo">
+      <div class="status-info">
+        <span id="sticker-count" aria-live="polite">0 stickers</span>
+        <span class="status-divider" aria-hidden="true">•</span>
         <span id="canvas-size">—</span>
       </div>
-      <div class="actions">
-        <button id="btn-cancel-edit" class="btn secondary">Close</button>
-        <button id="btn-save-edit" class="btn primary">Save</button>
+      <div class="actions" role="group" aria-label="Editor actions">
+        <button id="btn-cancel-edit" class="btn secondary" aria-label="Close editor without saving">Close</button>
+        <button id="btn-save-edit" class="btn primary" aria-label="Save edited image">Save</button>
       </div>
     </footer>
   </div>
+  
+  <!-- Toast Notifications Container -->
+  <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
 </div>

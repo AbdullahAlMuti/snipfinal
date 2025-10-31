@@ -1,6 +1,7 @@
 (() => {
   const STORAGE_KEY = 'watermarkedImages';
   const STICKER_KEY = 'userStickers';
+  const THEME_STORAGE_KEY = 'snipeEditorTheme';
   const OVERLAY_ID = 'snipe-editor-root';
   const CANVAS_ID = 'editor-canvas';
   const GALLERY_ID = 'sticker-gallery';
@@ -10,6 +11,17 @@
   let isInitialized = false;
   const stickers = [];
   const MAX_STICKERS = 20;
+  
+  // Responsive & Zoom state
+  let zoomLevel = 1;
+  let baseCanvasWidth = 0;
+  let baseCanvasHeight = 0;
+  let isSidebarOpen = false;
+  let resizeTimeout = null;
+  
+  // Touch/pinch zoom state
+  let lastTouchDistance = 0;
+  let initialPinchZoom = 1;
 
   // ─────────────────────────────────────────────
   // 🧩 Popup injection
@@ -79,24 +91,20 @@
       baseImg = await loadImage(src);
       console.log('✅ Image loaded successfully:', baseImg);
       
-      // Set canvas size based on image
-      const maxSize = 800;
-      const aspectRatio = baseImg.width / baseImg.height;
-      let canvasWidth, canvasHeight;
+      // Reset zoom
+      zoomLevel = 1;
       
-      if (aspectRatio > 1) {
-        canvasWidth = Math.min(maxSize, baseImg.width);
-        canvasHeight = canvasWidth / aspectRatio;
-      } else {
-        canvasHeight = Math.min(maxSize, baseImg.height);
-        canvasWidth = canvasHeight * aspectRatio;
-      }
+      // Set canvas size based on viewport dimensions (dynamic scaling)
+      const availableSpace = calculateAvailableSpace();
+      const scale = Math.min(availableSpace.width / baseImg.width, availableSpace.height / baseImg.height);
+      
+      baseCanvasWidth = baseImg.width * scale;
+      baseCanvasHeight = baseImg.height * scale;
       
       // Set canvas dimensions directly
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-      canvas.style.width = canvasWidth + 'px';
-      canvas.style.height = canvasHeight + 'px';
+      canvas.width = baseCanvasWidth;
+      canvas.height = baseCanvasHeight;
+      applyCanvasZoom();
       
       // Set high quality rendering
       ctx.imageSmoothingEnabled = false;
@@ -109,6 +117,8 @@
       drawCanvas();
       setupEventListeners();
       await loadStickers();
+      updateCanvasSizeDisplay();
+      await initTheme(); // Load saved theme
       
       console.log('✅ Image editor opened successfully');
     } catch (error) {
@@ -375,6 +385,7 @@
     if (!canvas) return;
     
     const rect = canvas.getBoundingClientRect();
+    // Account for zoom level in coordinate calculation
     const x = (e.clientX - rect.left) * (canvas.width / rect.width);
     const y = (e.clientY - rect.top) * (canvas.height / rect.height);
     
@@ -425,6 +436,7 @@
     if (!activeSticker || !canvas) return;
     
     const rect = canvas.getBoundingClientRect();
+    // Account for zoom level in coordinate calculation
     const x = (e.clientX - rect.left) * (canvas.width / rect.width);
     const y = (e.clientY - rect.top) * (canvas.height / rect.height);
     
@@ -490,7 +502,9 @@
       w: activeSticker.w,
       h: activeSticker.h,
       selected: true,
-      name: activeSticker.name + ' (Copy)'
+      name: activeSticker.name + ' (Copy)',
+      opacity: activeSticker.opacity || 1.0,
+      rotation: activeSticker.rotation || 0
     };
     
     // Deselect all stickers
@@ -571,6 +585,13 @@
       rotationValue.textContent = rotation + '°';
     }
   }
+  
+  function updateCanvasSizeDisplay() {
+    const canvasSizeElement = document.getElementById('canvas-size');
+    if (canvasSizeElement && baseImg) {
+      canvasSizeElement.textContent = `${Math.round(baseCanvasWidth)} × ${Math.round(baseCanvasHeight)}`;
+    }
+  }
 
   function showPropertiesPanel() {
     const propertiesPanel = document.getElementById('sticker-properties');
@@ -610,24 +631,236 @@
   }
 
   // ─────────────────────────────────────────────
+  // 📐 Responsive & Viewport Calculations
+  // ─────────────────────────────────────────────
+  function calculateAvailableSpace() {
+    const isMobile = window.innerWidth <= 1024;
+    const sidebarWidth = isMobile ? 0 : 280; // Sidebar hidden on mobile or overlay
+    const headerHeight = 56;
+    const footerHeight = 56;
+    const padding = 20;
+    
+    return {
+      width: (window.innerWidth - sidebarWidth - padding * 2) * 0.9,
+      height: (window.innerHeight - headerHeight - footerHeight - padding * 2) * 0.9
+    };
+  }
+  
+  function applyCanvasZoom() {
+    if (!canvas) return;
+    canvas.style.width = (baseCanvasWidth * zoomLevel) + 'px';
+    canvas.style.height = (baseCanvasHeight * zoomLevel) + 'px';
+    updateZoomDisplay();
+  }
+  
+  function updateZoomDisplay() {
+    const zoomDisplay = document.getElementById('zoom-level');
+    const zoomOverlay = document.getElementById('zoom-level-overlay');
+    const zoomText = Math.round(zoomLevel * 100) + '%';
+    
+    if (zoomDisplay) zoomDisplay.textContent = zoomText;
+    if (zoomOverlay) zoomOverlay.textContent = zoomText;
+  }
+  
+  // ─────────────────────────────────────────────
+  // 🔍 Zoom Functions
+  // ─────────────────────────────────────────────
+  function zoomIn() {
+    if (zoomLevel >= 4) return; // Max 400%
+    zoomLevel = Math.min(4, zoomLevel + 0.25);
+    applyCanvasZoom();
+  }
+  
+  function zoomOut() {
+    if (zoomLevel <= 0.25) return; // Min 25%
+    zoomLevel = Math.max(0.25, zoomLevel - 0.25);
+    applyCanvasZoom();
+  }
+  
+  function resetZoom() {
+    zoomLevel = 1;
+    applyCanvasZoom();
+    
+    // Scroll canvas to center if needed
+    const container = canvas?.parentElement;
+    if (container) {
+      container.scrollLeft = (container.scrollWidth - container.clientWidth) / 2;
+      container.scrollTop = (container.scrollHeight - container.clientHeight) / 2;
+    }
+  }
+  
+  // ─────────────────────────────────────────────
+  // 📱 Sidebar Toggle (Responsive)
+  // ─────────────────────────────────────────────
+  function toggleSidebar() {
+    const sidebar = document.getElementById('editor-side');
+    const overlay = document.getElementById('sidebar-overlay');
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    
+    if (!sidebar) return;
+    
+    isSidebarOpen = !isSidebarOpen;
+    
+    if (window.innerWidth <= 1024) {
+      // Mobile: toggle sidebar overlay
+      sidebar.classList.toggle('active', isSidebarOpen);
+      if (overlay) {
+        overlay.classList.toggle('active', isSidebarOpen);
+        overlay.setAttribute('aria-hidden', !isSidebarOpen);
+      }
+    }
+    
+    if (toggleBtn) {
+      toggleBtn.setAttribute('aria-expanded', isSidebarOpen);
+    }
+  }
+  
+  function closeSidebar() {
+    if (!isSidebarOpen) return;
+    isSidebarOpen = false;
+    
+    const sidebar = document.getElementById('editor-side');
+    const overlay = document.getElementById('sidebar-overlay');
+    const toggleBtn = document.getElementById('sidebar-toggle');
+    
+    if (sidebar) sidebar.classList.remove('active');
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+    if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+  }
+  
+  // ─────────────────────────────────────────────
+  // 🔄 Window Resize Handler
+  // ─────────────────────────────────────────────
+  function handleWindowResize() {
+    // Debounce resize handler
+    if (resizeTimeout) clearTimeout(resizeTimeout);
+    
+    resizeTimeout = setTimeout(() => {
+      if (!baseImg || !canvas) return;
+      
+      // Close sidebar on mobile when window gets larger
+      if (window.innerWidth > 1024 && isSidebarOpen) {
+        closeSidebar();
+      }
+      
+      // Recalculate canvas size
+      const availableSpace = calculateAvailableSpace();
+      const scale = Math.min(availableSpace.width / baseImg.width, availableSpace.height / baseImg.height);
+      
+      baseCanvasWidth = baseImg.width * scale;
+      baseCanvasHeight = baseImg.height * scale;
+      
+      // Maintain zoom level, but adjust base size
+      canvas.width = baseCanvasWidth;
+      canvas.height = baseCanvasHeight;
+      applyCanvasZoom();
+      drawCanvas();
+      updateCanvasSizeDisplay();
+      
+      console.log('🔄 Canvas resized:', { width: baseCanvasWidth, height: baseCanvasHeight, zoom: zoomLevel });
+    }, 250);
+  }
+  
+  // ─────────────────────────────────────────────
+  // 👆 Touch/Pinch Zoom Support
+  // ─────────────────────────────────────────────
+  function getTouchDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  
+  function handleTouchStart(e) {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      lastTouchDistance = getTouchDistance(e.touches);
+      initialPinchZoom = zoomLevel;
+    }
+  }
+  
+  function handleTouchMove(e) {
+    if (e.touches.length === 2 && lastTouchDistance > 0) {
+      e.preventDefault();
+      
+      const currentDistance = getTouchDistance(e.touches);
+      const scale = currentDistance / lastTouchDistance;
+      const newZoom = initialPinchZoom * scale;
+      
+      // Constrain zoom
+      zoomLevel = Math.max(0.25, Math.min(4, newZoom));
+      applyCanvasZoom();
+    }
+  }
+  
+  function handleTouchEnd(e) {
+    if (e.touches.length < 2) {
+      lastTouchDistance = 0;
+      initialPinchZoom = zoomLevel;
+    }
+  }
+  
+  // ─────────────────────────────────────────────
   // 🎛️ Event Listeners
   // ─────────────────────────────────────────────
   function setupEventListeners() {
     const overlay = document.getElementById(OVERLAY_ID);
     if (!overlay) return;
     
-    // Overlay click to close
+    // Overlay click to close (but not if clicking inside editor shell)
     overlay.addEventListener('click', e => {
-      if (e.target.id === OVERLAY_ID) closeEditor(false);
+      if (e.target.id === OVERLAY_ID) {
+        closeEditor(false);
+      }
     });
     
-    // Canvas events
+    // Sidebar toggle
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarClose = document.getElementById('sidebar-close');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    
+    if (sidebarToggle) sidebarToggle.onclick = toggleSidebar;
+    if (sidebarClose) sidebarClose.onclick = closeSidebar;
+    if (sidebarOverlay) {
+      sidebarOverlay.onclick = (e) => {
+        if (e.target === sidebarOverlay) closeSidebar();
+      };
+    }
+    
+    // Canvas events (mouse)
     if (canvas) {
       canvas.onmousedown = handleMouseDown;
       canvas.onmousemove = handleMouseMove;
       canvas.onmouseup = handleMouseUp;
       canvas.onmouseleave = handleMouseUp;
+      
+      // Touch events for pinch zoom and touch interactions
+      canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+      canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+      canvas.addEventListener('touchend', handleTouchEnd);
     }
+    
+    // Theme toggle
+    const themeToggle = document.getElementById('btn-theme-toggle');
+    if (themeToggle) themeToggle.onclick = toggleTheme;
+    
+    // AI Enhance buttons
+    const autoEnhanceBtn = document.getElementById('btn-auto-enhance');
+    const cleanBgBtn = document.getElementById('btn-clean-bg');
+    
+    if (autoEnhanceBtn) autoEnhanceBtn.onclick = applyAutoEnhance;
+    if (cleanBgBtn) cleanBgBtn.onclick = cleanBackgroundAndAddShadow;
+    
+    // Zoom controls
+    const zoomInBtn = document.getElementById('btn-zoom-in');
+    const zoomOutBtn = document.getElementById('btn-zoom-out');
+    const resetBtn = document.getElementById('btn-reset');
+    
+    if (zoomInBtn) zoomInBtn.onclick = zoomIn;
+    if (zoomOutBtn) zoomOutBtn.onclick = zoomOut;
+    if (resetBtn) resetBtn.onclick = resetZoom;
     
     // Button events
     const saveBtn = document.getElementById('btn-save-edit');
@@ -651,8 +884,18 @@
     if (opacitySlider) opacitySlider.oninput = handleOpacityChange;
     if (rotationSlider) rotationSlider.oninput = handleRotationChange;
     
+    // Window resize handler
+    window.addEventListener('resize', handleWindowResize);
+    
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyDown);
+    
+    // Close sidebar on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isSidebarOpen && window.innerWidth <= 1024) {
+        closeSidebar();
+      }
+    });
     
     console.log('✅ Event listeners setup complete');
   }
@@ -660,21 +903,38 @@
   function handleKeyDown(e) {
     if (!document.getElementById(OVERLAY_ID)?.classList.contains('show')) return;
     
+    // Keyboard shortcuts with Ctrl/Cmd
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key.toLowerCase()) {
+        case 'e':
+          e.preventDefault();
+          applyAutoEnhance();
+          break;
+        case 'b':
+          e.preventDefault();
+          cleanBackgroundAndAddShadow();
+          break;
+        case 's':
+          e.preventDefault();
+          saveEditedImage();
+          break;
+      }
+      return;
+    }
+    
+    // Other keyboard shortcuts
     switch (e.key) {
       case 'Escape':
-        closeEditor(false);
+        if (isSidebarOpen && window.innerWidth <= 1024) {
+          closeSidebar();
+        } else {
+          closeEditor(false);
+        }
         break;
       case 'Delete':
       case 'Backspace':
         if (activeSticker) {
           deleteSticker(activeSticker);
-        }
-        break;
-      case 's':
-      case 'S':
-        if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
-          saveEditedImage();
         }
         break;
     }
@@ -724,17 +984,249 @@
     stickers.length = 0;
     dragging = resizing = false;
     activeSticker = null;
+    isSidebarOpen = false;
+    zoomLevel = 1;
+    
+    // Remove event listeners
     document.removeEventListener('keydown', handleKeyDown);
+    window.removeEventListener('resize', handleWindowResize);
+    
+    // Close sidebar if open
+    closeSidebar();
     
     console.log(saved ? '✅ Editor closed and saved' : '❌ Editor closed without saving');
   }
 
+  // ─────────────────────────────────────────────
+  // 🌗 Theme System
+  // ─────────────────────────────────────────────
+  async function initTheme() {
+    try {
+      const result = await chrome.storage.local.get(THEME_STORAGE_KEY);
+      const savedTheme = result[THEME_STORAGE_KEY] || 'light';
+      applyTheme(savedTheme);
+    } catch (error) {
+      console.error('❌ Failed to load theme:', error);
+      applyTheme('light'); // Default to light
+    }
+  }
+  
+  function applyTheme(theme) {
+    const shell = document.querySelector('.editor-shell');
+    const themeIcon = document.getElementById('theme-icon');
+    
+    if (!shell) return;
+    
+    if (theme === 'dark') {
+      shell.classList.remove('light-theme');
+      shell.classList.add('dark-theme');
+      if (themeIcon) themeIcon.textContent = '☀️';
+    } else {
+      shell.classList.remove('dark-theme');
+      shell.classList.add('light-theme');
+      if (themeIcon) themeIcon.textContent = '🌙';
+    }
+  }
+  
+  async function toggleTheme() {
+    const shell = document.querySelector('.editor-shell');
+    if (!shell) return;
+    
+    const isDark = shell.classList.contains('dark-theme');
+    const newTheme = isDark ? 'light' : 'dark';
+    
+    applyTheme(newTheme);
+    
+    try {
+      await chrome.storage.local.set({ [THEME_STORAGE_KEY]: newTheme });
+      console.log('✅ Theme saved:', newTheme);
+    } catch (error) {
+      console.error('❌ Failed to save theme:', error);
+    }
+  }
+  
+  // ─────────────────────────────────────────────
+  // ✨ Toast Notifications
+  // ─────────────────────────────────────────────
+  function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icons = {
+      success: '✅',
+      error: '❌',
+      info: 'ℹ️'
+    };
+    
+    toast.innerHTML = `
+      <span class="toast-icon">${icons[type] || icons.info}</span>
+      <span class="toast-message">${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Trigger animation
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 300);
+    }, 3000);
+  }
+  
+  // ─────────────────────────────────────────────
+  // ✨ AI Auto Enhance
+  // ─────────────────────────────────────────────
+  function applyAutoEnhance() {
+    if (!canvas || !ctx || !baseImg) {
+      showToast('No image loaded', 'error');
+      return;
+    }
+    
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+      loadingOverlay.classList.add('active');
+      loadingOverlay.querySelector('.loading-text').textContent = 'Enhancing...';
+    }
+    
+    // Use setTimeout to allow UI to update
+    setTimeout(() => {
+      try {
+        // Get image data
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+        
+        // Process pixels: increase brightness and contrast
+        for (let i = 0; i < data.length; i += 4) {
+          // Brightness boost (5% increase)
+          data[i] = Math.min(255, data[i] * 1.05);     // R
+          data[i + 1] = Math.min(255, data[i + 1] * 1.05); // G
+          data[i + 2] = Math.min(255, data[i + 2] * 1.05); // B
+          
+          // Subtle contrast enhancement
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          
+          // Apply contrast factor (1.02 = 2% increase)
+          data[i] = Math.min(255, Math.max(0, (r - 128) * 1.02 + 128));
+          data[i + 1] = Math.min(255, Math.max(0, (g - 128) * 1.02 + 128));
+          data[i + 2] = Math.min(255, Math.max(0, (b - 128) * 1.02 + 128));
+        }
+        
+        // Put processed image data back
+        ctx.putImageData(imgData, 0, 0);
+        
+        // Redraw stickers on top
+        drawCanvas();
+        
+        if (loadingOverlay) {
+          loadingOverlay.classList.remove('active');
+        }
+        
+        showToast('Image enhanced successfully!', 'success');
+        console.log('✅ Auto enhance applied');
+      } catch (error) {
+        console.error('❌ Auto enhance failed:', error);
+        if (loadingOverlay) {
+          loadingOverlay.classList.remove('active');
+        }
+        showToast('Failed to enhance image', 'error');
+      }
+    }, 100);
+  }
+  
+  // ─────────────────────────────────────────────
+  // 🧹 Background Cleaner & Shadow
+  // ─────────────────────────────────────────────
+  async function cleanBackgroundAndAddShadow() {
+    if (!canvas || !ctx || !baseImg) {
+      showToast('No image loaded', 'error');
+      return;
+    }
+    
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+      loadingOverlay.classList.add('active');
+      loadingOverlay.querySelector('.loading-text').textContent = 'Cleaning background...';
+    }
+    
+    setTimeout(async () => {
+      try {
+        // Get image data
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+        
+        // Clean near-white/gray backgrounds
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const avg = (r + g + b) / 3;
+          
+          // If pixel is near white/gray (brightness > 230), make it pure white
+          if (avg > 230) {
+            data[i] = 255;     // R
+            data[i + 1] = 255; // G
+            data[i + 2] = 255; // B
+          }
+        }
+        
+        // Put cleaned image data back to canvas
+        ctx.putImageData(imgData, 0, 0);
+        
+        // Update baseImg to reflect cleaned background for future operations
+        // Create a temporary canvas to store the cleaned image
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.putImageData(imgData, 0, 0);
+        
+        // Create new Image object from cleaned canvas
+        const cleanedImg = new Image();
+        cleanedImg.src = tempCanvas.toDataURL();
+        await new Promise((resolve) => {
+          cleanedImg.onload = resolve;
+        });
+        
+        // Update baseImg reference
+        baseImg = cleanedImg;
+        
+        // Redraw canvas with cleaned background and stickers
+        drawCanvas();
+        
+        if (loadingOverlay) {
+          loadingOverlay.classList.remove('active');
+        }
+        
+        showToast('Background cleaned and shadow added!', 'success');
+        console.log('✅ Background cleaned and shadow applied');
+      } catch (error) {
+        console.error('❌ Background cleaning failed:', error);
+        if (loadingOverlay) {
+          loadingOverlay.classList.remove('active');
+        }
+        showToast('Failed to clean background', 'error');
+      }
+    }, 100);
+  }
+  
   // ─────────────────────────────────────────────
   // 🚀 Initialization
   // ─────────────────────────────────────────────
   function initialize() {
     if (isInitialized) return;
     isInitialized = true;
+    initTheme();
     console.log('🎨 Image editor initialized');
   }
 
